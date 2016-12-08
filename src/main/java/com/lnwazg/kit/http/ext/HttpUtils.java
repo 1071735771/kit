@@ -389,14 +389,12 @@ public class HttpUtils
         {
             BufferedReader reader = new BufferedReader(new InputStreamReader(stream, charset));
             StringWriter writer = new StringWriter();
-            
             char[] chars = new char[256];
             int count = 0;
             while ((count = reader.read(chars)) > 0)
             {
                 writer.write(chars, 0, count);
             }
-            
             return writer.toString();
         }
         finally

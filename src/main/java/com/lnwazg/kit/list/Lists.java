@@ -21,6 +21,22 @@ public class Lists
         return list;
     }
     
+    /**
+     * 快速生成一个List
+     * @author nan.li
+     * @param objects
+     * @return
+     */
+    public static List<Object> asList(Object... objects)
+    {
+        List<Object> ret = new ArrayList<>();
+        for (Object o : objects)
+        {
+            ret.add(o);
+        }
+        return ret;
+    }
+    
     public static boolean isNotEmpty(List<?> list)
     {
         if (list != null && list.size() > 0)
@@ -29,5 +45,4 @@ public class Lists
         }
         return false;
     }
-    
 }

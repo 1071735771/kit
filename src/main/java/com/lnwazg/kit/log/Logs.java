@@ -92,6 +92,11 @@ public class Logs
         log(s, LOG_LEVEL_NONE);
     }
     
+    public static void log(String... strs)
+    {
+        log(String.join("", strs), LOG_LEVEL_NONE);
+    }
+    
     public static void debug(Object s)
     {
         d(s);
