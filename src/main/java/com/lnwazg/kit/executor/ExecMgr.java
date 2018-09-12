@@ -1,10 +1,16 @@
 package com.lnwazg.kit.executor;
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
+import com.lnwazg.kit.executor.kit.RejectedExecutionHandlerImpl;
 import com.lnwazg.kit.taskman.CallableTask;
 import com.lnwazg.kit.taskman.TaskManager;
 
@@ -16,6 +22,25 @@ import com.lnwazg.kit.taskman.TaskManager;
  */
 public class ExecMgr
 {
+    //RejectedExecutionHandler implementation
+    static RejectedExecutionHandler rejectionHandler = new RejectedExecutionHandlerImpl();
+    //    static RejectedExecutionHandler rejectionHandler = new ThreadPoolExecutor.DiscardPolicy();
+    
+    //Get the ThreadFactory implementation to use
+    static ThreadFactory threadFactory = Executors.defaultThreadFactory();
+    
+    //creating the ThreadPoolExecutor
+    /**
+     * 流量控制的执行器<br>
+     * 最多100个线程同时执行，至少10个活跃待命线程<br>
+     * 后备队列的数量为1<br>
+     * 这样可以有效防止服务器瞬时垮掉<br>
+     * 这个线程池真的是非常重要的，是风控系统的最简化核心了！<br>
+     * 参考： HttpExchangeHandler
+     */
+    public static ThreadPoolExecutor trafficCtrlExec =
+        new ThreadPoolExecutor(25, 500, 10, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(500), threadFactory, rejectionHandler);
+        
     /**
      * 多线程（无上限限制）的线程池
      */

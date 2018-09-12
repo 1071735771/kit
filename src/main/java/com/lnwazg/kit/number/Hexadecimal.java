@@ -110,7 +110,6 @@ public class Hexadecimal
     
     /**
      * Converts a string in hexadecimal notation into byte.
-     * 
      * @param hex
      *            string in hexadecimal notation
      * @return a byte (1bytes)
@@ -149,18 +148,15 @@ public class Hexadecimal
             return null;
         }
         int len = str.length();
-        
         if (len % 2 != 0)
         {
             throw new NumberFormatException("Illegal length of string in hexadecimal notation.");
         }
         int numOfOctets = len / 2;
         byte[] seq = new byte[numOfOctets];
-        
         for (int i = 0; i < numOfOctets; i++)
         {
             String hex = str.substring(i * 2, i * 2 + 2);
-            
             seq[i] = parseByte(hex);
         }
         return seq;
@@ -281,7 +277,6 @@ public class Hexadecimal
     public static String valueOf(byte num, boolean padding)
     {
         String hex = Integer.toHexString((int)num);
-        
         if (padding)
         {
             hex = "00" + hex;

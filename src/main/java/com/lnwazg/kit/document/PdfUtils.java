@@ -12,6 +12,12 @@ import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfWriter;
 
+/**
+ * PDF工具包<br>
+ * 专用于输出pdf文档
+ * @author nan.li
+ * @version 2017年7月26日
+ */
 public class PdfUtils
 {
     

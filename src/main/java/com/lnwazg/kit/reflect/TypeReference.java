@@ -22,12 +22,14 @@ public class TypeReference<T>
      */
     protected TypeReference()
     {
+        //获取参数化类型类
         Type superClass = getClass().getGenericSuperclass();
         if (superClass instanceof Class<?>)
         {
             //不是一个参数化的类型
             throw new RuntimeException("Missing type parameter.");
         }
+        //获取参数化类型类中的泛型类型Type数据
         type = ((ParameterizedType)superClass).getActualTypeArguments()[0];
     }
     

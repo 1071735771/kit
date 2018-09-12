@@ -9,6 +9,10 @@ import org.apache.commons.lang3.time.StopWatch;
 
 import com.lnwazg.kit.testframework.anno.AfterEach;
 import com.lnwazg.kit.testframework.anno.AfterFinalOnce;
+import com.lnwazg.kit.testframework.anno.Benchmark;
+import com.lnwazg.kit.testframework.anno.BenchmarkHigh;
+import com.lnwazg.kit.testframework.anno.BenchmarkLow;
+import com.lnwazg.kit.testframework.anno.BenchmarkMiddle;
 import com.lnwazg.kit.testframework.anno.PrepareEach;
 import com.lnwazg.kit.testframework.anno.PrepareStartOnce;
 import com.lnwazg.kit.testframework.anno.TestCase;
@@ -94,30 +98,65 @@ public class TestFramework
                     System.out.println(String.format(">>>>>>>>>>>>>>>>>>>>>  开始测试方法： %s  >>>>>>>>>>>>>>>>>>>>>>>", method.getName()));
                     StopWatch stopWatch = new StopWatch();
                     stopWatch.start();
-                    method.setAccessible(true);
-                    if (prepareEachMethods != null && prepareEachMethods.size() > 0)
+                    
+                    int times = 1;//总运行次数。默认为1次，即不运行性能测试
+                    if (method.isAnnotationPresent(BenchmarkLow.class))
                     {
-                        for (Method m : prepareEachMethods)
-                        {
-                            System.out.println(String.format(">>>>>>>>>执行@PrepareEach方法： %s ", m.getName()));
-                            m.invoke(obj);
-                        }
+                        //低
+                        times = 1000;
+                        System.out.println(String.format("【准备开始benchmark，循环运行该方法  %s 次...】", times));
+                    }
+                    else if (method.isAnnotationPresent(BenchmarkMiddle.class))
+                    {
+                        //中
+                        times = 1000 * 100;
+                        System.out.println(String.format("【准备开始benchmark，循环运行该方法  %s 次...】", times));
+                    }
+                    else if (method.isAnnotationPresent(BenchmarkHigh.class))
+                    {
+                        //高
+                        times = 1000 * 100 * 100;
+                        System.out.println(String.format("【准备开始benchmark，循环运行该方法  %s 次...】", times));
+                    }
+                    else if (method.isAnnotationPresent(Benchmark.class))
+                    {
+                        //自定义次数
+                        times = method.getAnnotation(Benchmark.class).value();
+                        System.out.println(String.format("【准备开始benchmark，循环运行该方法  %s 次...】", times));
                     }
                     
-                    //如果该测试的方法有参数，那么全部传空
-                    int count = method.getParameterCount();
-                    Object[] args = new Object[count];
-                    method.invoke(obj, args);
-                    
-                    if (afterEachMethods != null && afterEachMethods.size() > 0)
+                    for (int i = 0; i < times; i++)
                     {
-                        for (Method m : afterEachMethods)
+                        method.setAccessible(true);
+                        if (prepareEachMethods != null && prepareEachMethods.size() > 0)
                         {
-                            System.out.println(String.format(">>>>>>>>>执行@AfterEach方法： %s ", m.getName()));
-                            m.invoke(obj);
+                            for (Method m : prepareEachMethods)
+                            {
+                                System.out.println(String.format(">>>>>>>>>执行@PrepareEach方法： %s ", m.getName()));
+                                m.invoke(obj);
+                            }
+                        }
+                        
+                        //如果该测试的方法有参数，那么全部传空
+                        int count = method.getParameterCount();
+                        Object[] args = new Object[count];
+                        method.invoke(obj, args);
+                        
+                        if (afterEachMethods != null && afterEachMethods.size() > 0)
+                        {
+                            for (Method m : afterEachMethods)
+                            {
+                                System.out.println(String.format(">>>>>>>>>执行@AfterEach方法： %s ", m.getName()));
+                                m.invoke(obj);
+                            }
                         }
                     }
-                    System.out.println(String.format("【测试共计耗时 %s 毫秒】", stopWatch.getTime()));
+                    long costTime = stopWatch.getTime();
+                    System.out.println(String.format("【总计测试了 %s 次， 总计耗时 %s 毫秒，平均每次运行耗时 %s 毫秒，方法调用速度为 %.2f 次/秒 (TPS)】",
+                        times,
+                        costTime,
+                        costTime * 1.0D / times,
+                        1000 / (costTime * 1.0D / times)));
                     System.out.println(String.format("<<<<<<<<<<<<<<<<<<<<<  %s 方法测试结束！   <<<<<<<<<<<<<<<<<<<<<<<\n", method.getName()));
                 }
             }

@@ -1,511 +1,717 @@
 package com.lnwazg.kit.http;
 
-import java.io.BufferedReader;
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.Socket;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang3.CharEncoding;
+import org.apache.commons.lang3.StringUtils;
+
+import com.lnwazg.kit.io.StreamUtils;
+import com.lnwazg.kit.map.Maps;
 
 /**
- * 轻巧的Http请求工具类，并且依赖最小化
+ * 进阶版的工具类<br>
+ * 支持https的使用
  * @author nan.li
  * @version 2016年9月20日
  */
-public final class HttpUtils
+public class HttpUtils
 {
-    /**
-    * Logger for this class
-    */
-    private static final Log logger = LogFactory.getLog(HttpUtils.class);
+    private static final String DEFAULT_CHARSET = CharEncoding.UTF_8;
+    
+    private static final String METHOD_POST = "POST";
+    
+    private static final String METHOD_GET = "GET";
+    
+    public static final String XML_CONTENT_TYPE = "text/xml";
+    
+    public static final int CONNECT_TIME_OUT = 10 * 1000;
+    
+    public static final int READ_TIME_OUT = 10 * 1000;
+    
+    public static String doPost(String url)
+    {
+        return doPost(url, new HashMap<>());
+    }
     
     /**
-     * HTTP请求方法: POST
+     * 执行HTTP POST请求，采用默认的字符集、默认的超时设置
+     * @author lnwazg@126.com
+     * @param url
+     * @param params
+     * @return
      */
-    public static final String POST_METHOD = "POST";
+    public static String doPost(String url, Map<String, String> params)
+    {
+        return doPost(url, params, DEFAULT_CHARSET, CONNECT_TIME_OUT, READ_TIME_OUT);
+    }
+    
+    public static String doPost(String url, Map<String, String> params, Map<String, String> headers)
+    {
+        return doPost(url, params, headers, DEFAULT_CHARSET, CONNECT_TIME_OUT, READ_TIME_OUT);
+    }
     
     /**
-     * HTTP请求方法: GET
+     * 执行HTTP POST请求，采用默认的字符集
+     * @param url    请求地址
+     * @param params 请求参数
+     * @return 响应字符串
+     * @throws IOException
      */
-    public static final String GET_METHOD = "GET";
+    public static String doPost(String url, Map<String, String> params, int connectTimeout, int readTimeout)
+    {
+        return doPost(url, params, DEFAULT_CHARSET, connectTimeout, readTimeout);
+    }
     
     /**
-     * 日志实例
+     * 执行HTTP POST请求。
+     *
+     * @param url     请求地址
+     * @param params  请求参数
+     * @param charset 字符集，如UTF-8, GBK, GB2312
+     * @return 响应字符串
+     * @throws IOException
      */
-    private static final String NEW_LINE = "\r\n";
+    public static String doPost(String url, Map<String, String> params, String charset, int connectTimeout, int readTimeout)
+    {
+        return doPost(url, params, new HashMap<>(), charset, connectTimeout, readTimeout);
+    }
     
-    private static final String CONTAIN_SYMBOL = "&";
-    
-    private static final String EQUAL_SYMBOL = "=";
-    
-    // 超时时间
-    private static final String CONNECT_TIMEOUT = "20000";
+    public static String doPost(String url, Map<String, String> params, Map<String, String> headers, String charset, int connectTimeout, int readTimeout)
+    {
+        String ctype = "application/x-www-form-urlencoded;charset=" + charset;
+        String query;
+        try
+        {
+            query = buildQueryParamString(params, charset);
+            byte[] content = {};
+            if (query != null)
+            {
+                content = query.getBytes(charset);
+            }
+            return doPost(url, ctype, content, headers, connectTimeout, readTimeout);
+        }
+        catch (UnsupportedEncodingException e)
+        {
+            e.printStackTrace();
+        }
+        return null;
+    }
     
     /**
-     *  返回的html所采用的默认编码方式
+     * 执行HTTP POST请求，发送指定消息体内容，采用默认的编码方式，默认的超时时间
+     * @author lnwazg@126.com
+     * @param url
+     * @param content
+     * @return
      */
-    private static final String DEFAULT_ENCODING = "UTF-8";
-    
-    public static void main(String[] args)
+    public static String doPost(String url, String content)
     {
         try
         {
-            //            System.out.println(send("http://www.qq.com", "GET", null, null, null));
-            System.out.println(get("http://www.qq.com", "GBK"));
-            //            System.out.println(get("http://www.baidu.com"));
+            return doPost(url, content.getBytes(DEFAULT_CHARSET));
+        }
+        catch (UnsupportedEncodingException e)
+        {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    public static String doPost(String url, String content, int connectTimeout, int readTimeout)
+    {
+        try
+        {
+            return doPost(url, content.getBytes(DEFAULT_CHARSET), connectTimeout, readTimeout);
+        }
+        catch (UnsupportedEncodingException e)
+        {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    /**
+     * 执行HTTP POST请求，发送指定消息体的字节码，采用默认的编码方式，默认的超时时间
+     * @author lnwazg@126.com
+     * @param url
+     * @param bytes
+     * @return
+     */
+    public static String doPost(String url, byte[] bytes)
+    {
+        return doPost(url, "application/x-www-form-urlencoded;charset=" + DEFAULT_CHARSET, bytes, CONNECT_TIME_OUT, READ_TIME_OUT);
+    }
+    
+    public static String doPost(String url, byte[] bytes, int connectTimeout, int readTimeout)
+    {
+        return doPost(url, "application/x-www-form-urlencoded;charset=" + DEFAULT_CHARSET, bytes, connectTimeout, readTimeout);
+    }
+    
+    public static String doPost(String url, String ctype, byte[] content, int connectTimeout, int readTimeout)
+    {
+        return doPost(url, ctype, content, new HashMap<>(), connectTimeout, readTimeout);
+    }
+    
+    public static String doPost(String url, byte[] bytes, Map<String, String> headers)
+    {
+        return doPost(url, "application/x-www-form-urlencoded;charset=" + DEFAULT_CHARSET, bytes, headers, CONNECT_TIME_OUT, READ_TIME_OUT);
+    }
+    
+    /**
+     * 执行HTTP POST请求。
+     * @param url     请求地址
+     * @param ctype   请求类型
+     * @param content 请求字节数组
+     * @return 响应字符串
+     * @throws IOException
+     */
+    public static String doPost(String url, String ctype, byte[] content, Map<String, String> headers, int connectTimeout, int readTimeout)
+    {
+        HttpURLConnection conn = null;
+        OutputStream out = null;
+        String rsp = null;
+        try
+        {
+            conn = getConnection(new URL(url), METHOD_POST, ctype);
+            conn.setConnectTimeout(connectTimeout);
+            conn.setReadTimeout(readTimeout);
+            //追加请求头
+            if (Maps.isNotEmpty(headers))
+            {
+                for (String key : headers.keySet())
+                {
+                    conn.addRequestProperty(key, headers.get(key));
+                }
+            }
+            out = conn.getOutputStream();
+            out.write(content);
+            rsp = getResponseAsString(conn);
+        }
+        catch (MalformedURLException e)
+        {
+            e.printStackTrace();
         }
         catch (IOException e)
         {
             e.printStackTrace();
         }
-    }
-    
-    public static String get(String url)
-        throws IOException
-    {
-        return get(url, DEFAULT_ENCODING);
-    }
-    
-    public static String get(String url, String encoding)
-        throws IOException
-    {
-        return send(url, GET_METHOD, null, null, null, encoding);
-    }
-    
-    public static String post(String url, Map<String, String> params, Map<String, String> headerInfo)
-        throws IOException
-    {
-        return post(url, params, headerInfo, DEFAULT_ENCODING);
-    }
-    
-    public static String post(String url, Map<String, String> params, Map<String, String> headerInfo, String encoding)
-        throws IOException
-    {
-        return send(url, POST_METHOD, null, null, null, encoding);
-    }
-    
-    /**
-     * 发送HTTP请求
-     */
-    public static String send(String urlString, String method, Map<String, String> parameters, Map<String, String> properties, String type)
-        throws IOException
-    {
-        return send(urlString, method, parameters, properties, type, DEFAULT_ENCODING);
-    }
-    
-    /**
-     * 发送HTTP请求
-     * 
-     * @param urlString
-     *            HTTP请求URL
-     * @param method
-     *            HTTP请求方法
-     * @param parameters
-     *            HTTP请求参数
-     * @param properties
-     *            HTTP请求附件挑起，作为互相功能的扩展
-     * @param type
-     *            当请求为METHOD为POST时:
-     *            type=1,则代表参数parameters体现在url中，即http://XXXXXXXXX
-     *            /?param1=12&param2=23 
-     *            type=2,则代表参数parameters体现在请求消息体中。
-     * @return 响应对象
-     * @throws IOException
-     *             IO异常
-     */
-    public static String send(String urlString, String method, Map<String, String> parameters, Map<String, String> properties, String type, String encoding)
-        throws IOException
-    {
-        // GET请求
-        if (GET_METHOD.equalsIgnoreCase(method))
+        finally
         {
-            return sendGetRequest(urlString, parameters, properties, encoding);
+            StreamUtils.close(out, conn);
         }
-        // POST请求
-        if (POST_METHOD.equalsIgnoreCase(method))
-        {
-            return sendPostRequest(urlString, parameters, properties, type, encoding);
-        }
-        return null;
+        return rsp;
     }
     
     /**
-     * 
-     * 发送HTTP Get请求
-     * 
-     * @param urlString
-     *            请求URL
-     * @param parameters
-     *            请求参数
-     * @param properties
-     *            HTTP请求附件挑起，作为互相功能的扩展
+     * 执行Get请求
+     * @author nan.li
+     * @param url
      * @return
      * @throws IOException
      */
-    private static String sendGetRequest(String urlString, Map<String, String> parameters, Map<String, String> properties, String encoding)
+    public static String doGet(String url)
+    {
+        return doGet(url, null);
+    }
+    
+    /**
+     * 执行HTTP GET请求。
+     *
+     * @param url    请求地址
+     * @param params 请求参数
+     * @return 响应字符串
+     * @throws IOException
+     */
+    public static String doGet(String url, Map<String, String> params)
+    {
+        return doGet(url, params, DEFAULT_CHARSET);
+    }
+    
+    /**
+     * 执行HTTP GET请求。
+     *
+     * @param url     请求地址
+     * @param params  请求参数
+     * @param charset 字符集，如UTF-8, GBK, GB2312
+     * @return 响应字符串
+     * @throws IOException
+     */
+    public static String doGet(String url, Map<String, String> params, String charset)
+    {
+        HttpURLConnection conn = null;
+        String rsp = null;
+        try
+        {
+            String ctype = "application/x-www-form-urlencoded;charset=" + charset;
+            String queryParamString = buildQueryParamString(params, charset);
+            conn = getConnection(buildGetUrl(url, queryParamString), METHOD_GET, ctype);
+            rsp = getResponseAsString(conn);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            StreamUtils.close(conn);
+        }
+        return rsp;
+    }
+    
+    /**
+     * 获取一个http连接对象
+     * @author nan.li
+     * @param url
+     * @param method
+     * @param ctype
+     * @return
+     * @throws IOException
+     */
+    private static HttpURLConnection getConnection(URL url, String method, String ctype)
         throws IOException
     {
-        // 如果有参数，拼装完整的URL
-        if (null != parameters && !parameters.isEmpty())
+        HttpURLConnection conn = null;
+        if ("https".equals(url.getProtocol()))
         {
-            StringBuffer param = new StringBuffer();
-            if (urlString.indexOf("?") != -1)
+            //            try
+            //            {
+            //                SslUtils.ignoreSsl();
+            //            }
+            //            catch (Exception e)
+            //            {
+            //                e.printStackTrace();
+            //            }
+            //到了JDK8,直接用自带的，即可！
+            //详细情况可参考以下说明文件：https://blogs.oracle.com/java-platform-group/entry/diagnosing_tls_ssl_and_https
+            HttpsURLConnection connHttps = (HttpsURLConnection)url.openConnection();
+            //            connHttps.setSSLSocketFactory(socketFactory);
+            //            connHttps.setHostnameVerifier(verifier);
+            conn = connHttps;
+        }
+        else
+        {
+            conn = (HttpURLConnection)url.openConnection();
+        }
+        conn.setRequestMethod(method);
+        if (METHOD_POST.equals(method))
+        {
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+        }
+        //        conn.setRequestProperty("Accept", "text/xml,text/javascript,text/html");
+        if (StringUtils.isNotEmpty(ctype))
+        {
+            conn.setRequestProperty("Content-Type", ctype);
+        }
+        return conn;
+    }
+    
+    /**
+     * 拼接GET请求的URL
+     * @author nan.li
+     * @param strUrl
+     * @param queryParamString
+     * @return
+     * @throws IOException
+     */
+    private static URL buildGetUrl(String strUrl, String queryParamString)
+        throws IOException
+    {
+        URL url = new URL(strUrl);
+        if (StringUtils.isBlank(queryParamString))
+        {
+            return url;
+        }
+        if (StringUtils.isBlank(url.getQuery()))
+        {
+            //如果查询参数为空的话
+            if (strUrl.endsWith("?"))
             {
-                //url中已经追加过参数了，那么再追加就应该用&符号
-                param.append("&");
+                strUrl = String.format("%s%s", strUrl, queryParamString);
             }
             else
             {
-                param.append('?');
+                strUrl = String.format("%s?%s", strUrl, queryParamString);
             }
-            for (Map.Entry<String, String> entry : parameters.entrySet())
-            {
-                param.append(entry.getKey()).append(EQUAL_SYMBOL).append(entry.getValue()).append(CONTAIN_SYMBOL);
-            }
-            // 拼装完整的URL，并去掉最后一个&符号
-            urlString += param.substring(0, param.length() - 1);
         }
-        HttpURLConnection urlConnection = null;
-        try
+        else
         {
-            URL url = new URL(urlString);
-            urlConnection = (HttpURLConnection)url.openConnection();
-            // 设置超时时间20秒
-            urlConnection.setConnectTimeout(Integer.valueOf(CONNECT_TIMEOUT));
-            urlConnection.setRequestMethod(GET_METHOD);
-            urlConnection.setDoOutput(true);
-            urlConnection.setDoInput(true);
-            urlConnection.setUseCaches(false);
-            //若properties非空,则在连接中追加上properties属性
-            if (properties != null)
+            if (strUrl.endsWith("&"))
             {
-                for (Map.Entry<String, String> entry : properties.entrySet())
-                {
-                    urlConnection.addRequestProperty(entry.getKey(), entry.getValue());
-                }
+                strUrl = String.format("%s%s", strUrl, queryParamString);
+            }
+            else
+            {
+                strUrl = String.format("%s&s", strUrl, queryParamString);
             }
         }
-        catch (IOException e)
-        {
-            logger.error("Fail to send http request. URL:" + urlString, e);
-            throw e;
-        }
-        return getContent(urlString, urlConnection, encoding);
+        return new URL(strUrl);
     }
     
     /**
-     * 
-     * 发送HTTP Post请求
-     * 
-     * @param urlString
-     *            请求URL
-     * @param parameters
-     *            请求参数
-     * @param properties
-     *            HTTP请求附件挑起，作为互相功能的扩展
-     * @param type
-     *            当请求为METHOD为POST时:
-     *            type=1,则代表参数parameters体现在url中，即http://XXXXXXXXX/?param1=12&param2=23
-     *            type=2,则代表参数parameters体现在请求消息体中。
-     * @return
+     * 根据指定的字符集参数，去拼接查询参数的字符串<br>
+     * 各个查询参数之间用&符号连接
+     * @author nan.li
+     * @param params
+     * @param charset
+     * @return            aaa=1&bbb=2&ccc=3
+     * @throws UnsupportedEncodingException 
      * @throws IOException
      */
-    private static String sendPostRequest(String urlString, Map<String, String> parameters, Map<String, String> properties, String type, String encoding)
-        throws IOException
+    public static String buildQueryParamString(Map<String, String> params, String charset)
+        throws UnsupportedEncodingException
     {
-        HttpURLConnection urlConnection = null;
-        OutputStream out = null;
-        
-        try
+        if (params == null || params.isEmpty())
         {
-            URL url = new URL(urlString);
-            urlConnection = (HttpURLConnection)url.openConnection();
-            
-            // 设置超时时间20秒
-            urlConnection.setConnectTimeout(Integer.valueOf(CONNECT_TIMEOUT));
-            urlConnection.setRequestMethod(POST_METHOD);
-            urlConnection.setDoOutput(true);
-            urlConnection.setDoInput(true);
-            urlConnection.setUseCaches(false);
-            if (properties != null)
+            return null;
+        }
+        StringBuilder query = new StringBuilder();
+        Set<Map.Entry<String, String>> entries = params.entrySet();
+        boolean hasParam = false;
+        for (Map.Entry<String, String> entry : entries)
+        {
+            String name = entry.getKey();
+            String value = entry.getValue();
+            // 忽略参数名或参数值为空的参数
+            if (StringUtils.isNotBlank(name) && StringUtils.isNotBlank(value))
             {
-                for (Map.Entry<String, String> entry : properties.entrySet())
+                if (hasParam)
                 {
-                    urlConnection.addRequestProperty(entry.getKey(), entry.getValue());
-                }
-            }
-            if (parameters != null && !parameters.isEmpty())
-            {
-                StringBuffer param = new StringBuffer();
-                if ("1".equals(type))
-                {
-                    for (Map.Entry<String, String> entry : parameters.entrySet())
-                    {
-                        param.append(entry.getKey()).append(EQUAL_SYMBOL).append(entry.getValue());
-                        param.append(CONTAIN_SYMBOL);
-                    }
-                }
-                else if ("2".equals(type))
-                {
-                    for (Map.Entry<String, String> entry : parameters.entrySet())
-                    {
-                        param.append(entry.getValue());
-                    }
+                    query.append("&");
                 }
                 else
                 {
-                    //默认情况下，同第一种情况
-                    for (Map.Entry<String, String> entry : parameters.entrySet())
+                    hasParam = true;
+                }
+                query.append(name).append("=").append(URLEncoder.encode(value, charset));
+            }
+        }
+        return query.toString();
+    }
+    
+    /**
+     * 从response中获取返回的字符串
+     * @author nan.li
+     * @param conn
+     * @return
+     * @throws IOException
+     */
+    protected static String getResponseAsString(HttpURLConnection conn)
+        throws IOException
+    {
+        String charset = getResponseCharset(conn.getContentType());
+        InputStream es = conn.getErrorStream();
+        if (es == null)
+        {
+            InputStream inputStream;
+            try
+            {
+                inputStream = conn.getInputStream();
+                return getStreamAsString(inputStream, charset);
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+                return null;
+            }
+        }
+        else
+        {
+            //获取错误流
+            String msg = getStreamAsString(es, charset);
+            if (StringUtils.isBlank(msg))
+            {
+                throw new IOException(conn.getResponseCode() + ":" + conn.getResponseMessage());
+            }
+            else
+            {
+                throw new IOException(msg);
+            }
+        }
+    }
+    
+    /**
+     * 从响应流中获取字符串
+     * @author nan.li
+     * @param inputStream
+     * @param charset
+     * @return
+     * @throws IOException
+     */
+    private static String getStreamAsString(InputStream inputStream, String charset)
+        throws IOException
+    {
+        try
+        {
+            return IOUtils.toString(inputStream, charset);
+        }
+        finally
+        {
+            StreamUtils.close(inputStream);
+        }
+    }
+    
+    /**
+     * 获取响应的字符集
+     * @author nan.li
+     * @param ctype
+     * @return
+     */
+    private static String getResponseCharset(String ctype)
+    {
+        String charset = DEFAULT_CHARSET;
+        if (!StringUtils.isEmpty(ctype))
+        {
+            String[] params = ctype.split(";");
+            for (String param : params)
+            {
+                param = param.trim();
+                if (param.startsWith("charset"))
+                {
+                    String[] pair = param.split("=", 2);
+                    if (pair.length == 2)
                     {
-                        param.append(entry.getKey()).append(EQUAL_SYMBOL).append(entry.getValue());
-                        param.append(CONTAIN_SYMBOL);
+                        if (!StringUtils.isEmpty(pair[1]))
+                        {
+                            charset = pair[1].trim();
+                        }
                     }
+                    break;
                 }
-                out = urlConnection.getOutputStream();
-                out.write(param.toString().getBytes());
-                urlConnection.getOutputStream().flush();
             }
         }
-        catch (IOException e)
-        {
-            logger.error("Fail to send http request. URL:" + urlString, e);
-            throw e;
-        }
-        finally
-        {
-            close(out);
-        }
-        return getContent(urlString, urlConnection, encoding);
+        return charset;
     }
     
     /**
-     * 发送HTTP请求
-     * 
-     * @param urlString
-     *            HTTP请求URL
-     * @param method
-     *            HTTP请求方法
-     * @param properties
-     *            HTTP请求附件挑起，作为互相功能的扩展
-     * @return 响应对象
-     * @throws IOException
-     *             IO异常
+     * 使用默认的UTF-8字符集反编码请求参数值。
+     *
+     * @param value 参数值
+     * @return 反编码后的参数值
      */
-    public static Map<String, String> sendByHeader(String urlString, String method, Map<String, String> properties)
-        throws IOException
+    public static String decode(String value)
     {
-        // 发送请求
-        if (POST_METHOD.equalsIgnoreCase(method) || GET_METHOD.equalsIgnoreCase(method))
-        {
-            return sendRequestByHeader(urlString, method, properties);
-        }
-        return null;
+        return decode(value, DEFAULT_CHARSET);
     }
     
     /**
-     * 
-     * 发送HTTP请求 参数放在消息头中
-     * 
-     * @param urlString
-     *            请求URL
-     * @param method
-     *            请求方法
-     * @param properties
-     *            HTTP请求附件挑起，作为互相功能的扩展
-     * @return Map<String,String>
-     * @throws IOException
+     * 使用默认的UTF-8字符集编码请求参数值。
+     *
+     * @param value 参数值
+     * @return 编码后的参数值
      */
-    private static Map<String, String> sendRequestByHeader(String urlString, String method, Map<String, String> properties)
-        throws IOException
+    public static String encode(String value)
     {
-        HttpURLConnection urlConnection = null;
-        
-        try
+        return encode(value, DEFAULT_CHARSET);
+    }
+    
+    /**
+     * 使用指定的字符集反编码请求参数值。
+     *
+     * @param value   参数值
+     * @param charset 字符集
+     * @return 反编码后的参数值
+     */
+    public static String decode(String value, String charset)
+    {
+        String result = null;
+        if (StringUtils.isNotBlank(value))
         {
-            URL url = new URL(urlString);
-            urlConnection = (HttpURLConnection)url.openConnection();
-            
-            // 设置超时时间20秒
-            urlConnection.setConnectTimeout(Integer.valueOf(CONNECT_TIMEOUT));
-            if (POST_METHOD.equalsIgnoreCase(method))
+            try
             {
-                urlConnection.setRequestMethod(POST_METHOD);
+                result = URLDecoder.decode(value, charset);
             }
-            else if (GET_METHOD.equalsIgnoreCase(method))
+            catch (IOException e)
             {
-                urlConnection.setRequestMethod(GET_METHOD);
+                throw new RuntimeException(e);
             }
-            
-            urlConnection.setUseCaches(false);
-            
-            if (properties != null)
+        }
+        return result;
+    }
+    
+    /**
+     * 使用指定的字符集编码请求参数值。
+     *
+     * @param value   参数值
+     * @param charset 字符集
+     * @return 编码后的参数值
+     */
+    public static String encode(String value, String charset)
+    {
+        String result = null;
+        if (StringUtils.isNotBlank(value))
+        {
+            try
             {
-                for (Map.Entry<String, String> entry : properties.entrySet())
+                result = URLEncoder.encode(value, charset);
+            }
+            catch (IOException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+        return result;
+    }
+    
+    public static Map<String, String> getParamsFromUrl(String url)
+    {
+        Map<String, String> map = null;
+        if (url != null && url.indexOf('?') != -1)
+        {
+            map = splitUrlQuery(url.substring(url.indexOf('?') + 1));
+        }
+        if (map == null)
+        {
+            map = new HashMap<String, String>();
+        }
+        return map;
+    }
+    
+    /**
+     * 从URL中提取所有的参数。
+     *
+     * @param query URL地址
+     * @return 参数映射
+     */
+    public static Map<String, String> splitUrlQuery(String query)
+    {
+        Map<String, String> result = new HashMap<String, String>();
+        String[] pairs = query.split("&");
+        if (pairs != null && pairs.length > 0)
+        {
+            for (String pair : pairs)
+            {
+                String[] param = pair.split("=", 2);
+                if (param != null && param.length == 2)
                 {
-                    urlConnection.addRequestProperty(entry.getKey(), entry.getValue());
-                }
-            }
-            
-        }
-        catch (IOException e)
-        {
-            logger.error("Fail to send http request. URL:" + urlString, e);
-            throw e;
-        }
-        
-        return getResponseHeader(urlString, urlConnection);
-    }
-    
-    /**
-     * 得到响应消息头字段
-     * 
-     * @param urlConnection
-     * @return 响应对象
-     * @throws IOException
-     */
-    private static Map<String, String> getResponseHeader(String urlString, HttpURLConnection urlConnection)
-        throws IOException
-    {
-        Map<String, String> respHeader = new HashMap<String, String>();
-        
-        // 将返回码及响应头字段放入map中
-        try
-        {
-            String returnCode = String.valueOf(urlConnection.getResponseCode());
-            Map<String, List<String>> properties = urlConnection.getHeaderFields();
-            respHeader.put("returnCode", returnCode);
-            
-            if (properties != null)
-            {
-                for (Map.Entry<String, List<String>> entry : properties.entrySet())
-                {
-                    StringBuffer temp = new StringBuffer();
-                    List<String> list = entry.getValue();
-                    Iterator<String> iter = list.iterator();
-                    
-                    while (iter.hasNext())
-                    {
-                        temp.append(iter.next() + ",");
-                    }
-                    
-                    String value = temp.substring(0, temp.length() - 1);
-                    respHeader.put(entry.getKey(), value);
+                    result.put(param[0], param[1]);
                 }
             }
         }
-        catch (IOException e)
-        {
-            logger.error("Fail to get value from response of Http. URL:" + urlString, e);
-            throw e;
-        }
-        finally
-        {
-            if (urlConnection != null)
-            {
-                urlConnection.disconnect();
-            }
-        }
-        
-        return respHeader;
+        return result;
     }
     
-    /**
-     * 得到响应对象
-     * 
-     * @param urlConnection
-     * @return 响应对象
-     * @throws IOException
-     */
-    private static String getContent(String urlString, HttpURLConnection urlConnection, String encoding)
-        throws IOException
-    {
-        InputStream in = null;
-        BufferedReader bufferedReader = null;
-        String content = null;
-        try
-        {
-            in = urlConnection.getInputStream();
-            // 获取编码格式，如果HTTP返回编码格式不存在，则采用默认编码方式
-            bufferedReader = new BufferedReader(new InputStreamReader(in, encoding));
-            StringBuffer temp = new StringBuffer();
-            String line = bufferedReader.readLine();
-            while (line != null)
-            {
-                temp.append(line).append(NEW_LINE);
-                line = bufferedReader.readLine();
-            }
-            content = temp.toString();
-        }
-        catch (IOException e)
-        {
-            logger.error("Fail to get value from response of Http. URL:" + urlString, e);
-            throw e;
-        }
-        finally
-        {
-            disconnect(urlConnection);
-            close(bufferedReader, in);
-        }
-        return content;
-    }
+    //  private static SSLContext ctx = null;
+    //    
+    //    static HostnameVerifier verifier = null;
+    //    
+    //    static SSLSocketFactory socketFactory = null;
+    //    
+    //    private static class DefaultTrustManager implements X509TrustManager
+    //    {
+    //        public X509Certificate[] getAcceptedIssuers()
+    //        {
+    //            return null;
+    //        }
+    //        
+    //        public void checkClientTrusted(X509Certificate[] chain, String authType)
+    //            throws CertificateException
+    //        {
+    //        }
+    //        
+    //        public void checkServerTrusted(X509Certificate[] chain, String authType)
+    //            throws CertificateException
+    //        {
+    //        }
+    //    }
+    //    
+    //    static
+    //    {
+    //        try
+    //        {
+    //            ctx = SSLContext.getInstance("TLS");
+    //            ctx.init(new KeyManager[0], new TrustManager[] {new DefaultTrustManager()}, new SecureRandom());
+    //            ctx.getClientSessionContext().setSessionTimeout(15);
+    //            ctx.getClientSessionContext().setSessionCacheSize(1000);
+    //            socketFactory = ctx.getSocketFactory();
+    //        }
+    //        catch (Exception e)
+    //        {
+    //            //ignore
+    //        }
+    //        verifier = new HostnameVerifier()
+    //        {
+    //            public boolean verify(String urlHostName, SSLSession session)
+    //            {
+    //                System.out.println("Warning: URL Host: " + urlHostName + " vs. " + session.getPeerHost());
+    //                return true;
+    //            }
+    //        };
+    //    }
+    //    
+    //    static HostnameVerifier hv = new HostnameVerifier()
+    //    {
+    //        public boolean verify(String urlHostName, SSLSession session)
+    //        {
+    //            System.out.println("Warning: URL Host: " + urlHostName + " vs. " + session.getPeerHost());
+    //            return true;
+    //        }
+    //    };
+    //    
+    //    static void trustAllHttpsCertificates()
+    //    {
+    //        javax.net.ssl.TrustManager[] trustAllCerts = new javax.net.ssl.TrustManager[1];
+    //        javax.net.ssl.TrustManager tm = new miTM();
+    //        trustAllCerts[0] = tm;
+    //        javax.net.ssl.SSLContext sc;
+    //        try
+    //        {
+    //            sc = javax.net.ssl.SSLContext.getInstance("SSL");
+    //            sc.init(null, trustAllCerts, null);
+    //            javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+    //        }
+    //        catch (NoSuchAlgorithmException e)
+    //        {
+    //            e.printStackTrace();
+    //        }
+    //        catch (KeyManagementException e)
+    //        {
+    //            e.printStackTrace();
+    //        }
+    //    }
+    //    
+    //    static class miTM implements javax.net.ssl.TrustManager, javax.net.ssl.X509TrustManager
+    //    {
+    //        public java.security.cert.X509Certificate[] getAcceptedIssuers()
+    //        {
+    //            return null;
+    //        }
+    //        
+    //        public boolean isServerTrusted(java.security.cert.X509Certificate[] certs)
+    //        {
+    //            return true;
+    //        }
+    //        
+    //        public boolean isClientTrusted(java.security.cert.X509Certificate[] certs)
+    //        {
+    //            return true;
+    //        }
+    //        
+    //        public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType)
+    //            throws java.security.cert.CertificateException
+    //        {
+    //            return;
+    //        }
+    //        
+    //        public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType)
+    //            throws java.security.cert.CertificateException
+    //        {
+    //            return;
+    //        }
+    //    }
     
-    /** 
-     * 同时关闭多个流对象
-     * @param streams   待关闭的流对象，可以使用数组或多参数的方式传入多个参数值
-     * @see [类、类#方法、类#成员]
-     */
-    public static void close(Closeable... streams)
-    {
-        if ((null == streams) || (streams.length == 0))
-        {
-            return;
-        }
-        for (Closeable stream : streams)
-        {
-            IOUtils.closeQuietly(stream);
-        }
-    }
-    
-    public static void close(Socket... sockets)
-    {
-        for (Socket socket : sockets)
-        {
-            if (socket != null && !socket.isClosed())
-            {
-                try
-                {
-                    socket.close();
-                }
-                catch (IOException e)
-                {
-                }
-            }
-        }
-    }
-    
-    /**
-     * 关闭HTTP连接
-     * 
-     * @param urlConnection
-     *            HTTP连接实例
-     */
-    public static void disconnect(HttpURLConnection urlConnection)
-    {
-        if (null == urlConnection)
-        {
-            return;
-        }
-        urlConnection.disconnect();
-    }
 }

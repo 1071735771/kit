@@ -42,6 +42,11 @@ public class FileCacheLite
         fileCacheProxy.put(key, value);
     }
     
+    public void put(Serializable key, Object value)
+    {
+        fileCacheProxy.put(key, value);
+    }
+    
     public static Cache getCacheObj()
     {
         return fileCacheProxy.getCacheObj();

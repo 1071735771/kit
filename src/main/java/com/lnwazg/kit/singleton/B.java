@@ -20,6 +20,49 @@ public class B
     }
     
     /**
+     * 存储一个类的实例
+     * @author Administrator
+     * @param t
+     */
+    public static <T> void set(T t)
+    {
+        put(t);
+    }
+    
+    /**
+     * 存储一个类的实例
+     * @author Administrator
+     * @param t
+     */
+    public static <T> void s(T t)
+    {
+        put(t);
+    }
+    
+    //弃用，因为此处的泛型定义无意义
+    //    /**
+    //     * 将某个类的代理实例设置到注册表中
+    //     * @author nan.li
+    //     * @param clazz
+    //     * @param t
+    //     */
+    //    public static <T> void s(Class<T> clazz, T t)
+    //    {
+    //        BeanMgr.put(clazz, t);
+    //    }
+    
+    /**
+     * 将某个类的代理实例设置到注册表中，该方法支持native类型（非泛型）的处理
+     * @author nan.li
+     * @param clazz
+     * @param t
+     */
+    public static void s(Class<?> clazz, Object object)
+    {
+        BeanMgr.put(clazz, object);
+    }
+    
+    /**
      * 取出一个类的实例<br>
      * 假如查不到这个类的实例，则会返回一个默认的实例
      * @author Administrator
@@ -31,30 +74,38 @@ public class B
         return BeanMgr.get(clazz);
     }
     
-    public static <T> void set(T t)
-    {
-        put(t);
-    }
-    
+    /**
+     * 取出一个类的实例<br>
+     * 假如查不到这个类的实例，则会返回一个默认的实例
+     * @author Administrator
+     * @param clazz
+     * @return
+     */
     public static <T> T g(Class<T> clazz)
     {
         return get(clazz);
     }
     
-    public static <T> void s(T t)
+    /**
+     * 仅查询某个key clazz是否有值，不做额外的实例化操作
+     * @author nan.li
+     * @param clazz
+     * @return
+     */
+    public static <T> T query(Class<T> clazz)
     {
-        put(t);
+        return BeanMgr.query(clazz);
     }
     
     /**
-     * 将某个类的代理实例设置到注册表中
+     * 仅查询某个key clazz是否有值，不做额外的实例化操作
      * @author nan.li
      * @param clazz
-     * @param t
+     * @return
      */
-    public static <T> void s(Class<T> clazz, T t)
+    public static <T> T q(Class<T> clazz)
     {
-        BeanMgr.put(clazz,t);
+        return query(clazz);
     }
     
     /**
@@ -66,7 +117,7 @@ public class B
      */
     public static <T> void i(Class<T> clazz, Object... objects)
     {
-        BeanMgr.inject(clazz, objects);
+        BeanMgr.injectAndPut(clazz, objects);
     }
     
     /**
@@ -78,7 +129,6 @@ public class B
      */
     public static <T> void i(T t, Object... objects)
     {
-        BeanMgr.inject(t, objects);
+        BeanMgr.injectAndPut(t, objects);
     }
-    
 }

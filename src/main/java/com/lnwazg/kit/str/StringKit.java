@@ -99,4 +99,82 @@ public class StringKit
         return twoTuples;
     }
     
+    /**
+     * 精简显示，限定最大的字节数，并且去除掉多余的空格<br>
+     * 一个中文占用两个字节
+     * @author nan.li
+     * @param str
+     * @param maxLength
+     * @return
+     */
+    public static String abbreviate(String str, int maxLength)
+    {
+        if (StringUtils.isEmpty(str))
+        {
+            return "";
+        }
+        char[] chars = str.toCharArray();
+        StringBuilder sBuilder = new StringBuilder();
+        int totalLength = 0;
+        boolean lastCharIsEmpty = false;
+        boolean thisCharIsEmpty = false;
+        for (int i = 0; i < chars.length; i++)
+        {
+            char c = chars[i];
+            if (isChinese(c))
+            {
+                totalLength += 2;
+                thisCharIsEmpty = false;
+            }
+            else if (c == ' ')
+            {
+                totalLength += 0;
+                thisCharIsEmpty = true;
+            }
+            else
+            {
+                totalLength += 1;
+                thisCharIsEmpty = false;
+            }
+            if (thisCharIsEmpty && lastCharIsEmpty)
+            {
+            
+            }
+            else
+            {
+                sBuilder.append(c);
+            }
+            
+            if (c == ' ')
+            {
+                lastCharIsEmpty = true;
+            }
+            else
+            {
+                lastCharIsEmpty = false;
+            }
+            
+            if (totalLength >= maxLength)
+            {
+                //判定有没有达到终点
+                if (i != chars.length - 1)
+                {
+                    sBuilder.append("...");
+                }
+                return sBuilder.toString();
+            }
+        }
+        return str;
+    }
+    
+    /**
+     * 判断一个字符是否是中文
+     * @author nan.li
+     * @param c
+     * @return
+     */
+    public static boolean isChinese(char c)
+    {
+        return c >= 0x4E00 && c <= 0x9FA5;// 根据字节码判断
+    }
 }

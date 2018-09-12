@@ -12,13 +12,18 @@ public class D
      */
     public static void d(Object o, String... describes)
     {
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>开始描述>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         if (o instanceof List<?>)
         {
-            DescribeUtils.describeList((List<?>)o);
+            DescribeUtils.describeList((List<?>)o, describes);
         }
         else if (o instanceof Map<?, ?>)
         {
-            DescribeUtils.describeMap((Map<?, ?>)o);
+            DescribeUtils.describeMap((Map<?, ?>)o, describes);
+        }
+        else if (o instanceof Object[])
+        {
+            DescribeUtils.describeArray((Object[])o, describes);
         }
         else if (o instanceof byte[])
         {
@@ -26,8 +31,14 @@ public class D
         }
         else
         {
-            DescribeUtils.describe(o);
+            DescribeUtils.describe(o, describes);
         }
+        System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<结束描述<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+    }
+    
+    public static void d(Object o)
+    {
+        d(o, "");
     }
     
     /**

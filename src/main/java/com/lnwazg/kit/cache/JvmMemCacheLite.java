@@ -1,7 +1,5 @@
 package com.lnwazg.kit.cache;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -15,18 +13,9 @@ import java.util.concurrent.TimeUnit;
 public class JvmMemCacheLite
 {
     /**
-     * 记录的对象的map
+     * lite，一个唯一的共享实例
      */
-    static Map<String, Object> objMap = new ConcurrentHashMap<>();
-    
-    /**
-     * 记录的放入时间的map
-     */
-    static Map<String, Long> recordTimestampMap = new ConcurrentHashMap<>();
-    
-    private JvmMemCacheLite()
-    {
-    }
+    static JvmMemCache<Object> lite = new JvmMemCache<>();
     
     /**
      * 从JVM缓存中获取数据，给定指定的失效时间参数
@@ -39,51 +28,12 @@ public class JvmMemCacheLite
      */
     public static Object get(String key, int failTime, TimeUnit timeUnit)
     {
-        // 如果缓存表中压根就没有，那么忽略之
-        if (!objMap.containsKey(key) || !recordTimestampMap.containsKey(key))
-        {
-            return null;
-        }
-        
-        // 当前时间
-        long now = System.currentTimeMillis();
-        // 放入的时间
-        long putTime = recordTimestampMap.get(key);
-        // 时间差
-        long deltaTimeInMills = now - putTime; // 时间差
-        
-        // 超过如下毫秒数则认为缓存已经过期
-        long failTimeInMills = 0;
-        switch (timeUnit)
-        {
-            case DAYS:
-                failTimeInMills = failTime * 24 * 60 * 60 * 1000;
-                break;
-            case HOURS:
-                failTimeInMills = failTime * 60 * 60 * 1000;
-                break;
-            case MINUTES:
-                failTimeInMills = failTime * 60 * 1000;
-                break;
-            case SECONDS:
-                failTimeInMills = failTime * 1000;
-                break;
-            default:
-                break;
-        }
-        if (deltaTimeInMills > failTimeInMills)
-        {
-            return null;
-        }
-        else
-        {
-            return objMap.get(key);
-        }
+        return lite.get(key, failTime, timeUnit);
     }
     
     public static Object get(String key)
     {
-        return objMap.get(key);
+        return lite.get(key);
     }
     
     /**
@@ -95,8 +45,7 @@ public class JvmMemCacheLite
      */
     public static void put(String key, Object obj)
     {
-        objMap.put(key, obj);
-        recordTimestampMap.put(key, System.currentTimeMillis());
+        lite.put(key, obj);
     }
     
     /**
@@ -108,6 +57,18 @@ public class JvmMemCacheLite
      */
     public static boolean containsKey(String key)
     {
-        return objMap.containsKey(key);
+        return lite.containsKey(key);
+    }
+    
+    /**
+     * 检查缓存对象中是否有某个键<br>
+     * 指定了缓存失效时间
+     * @author nan.li
+     * @param key
+     * @return
+     */
+    public boolean containsKey(String key, int failTime, TimeUnit timeUnit)
+    {
+        return lite.containsKey(key, failTime, timeUnit);
     }
 }

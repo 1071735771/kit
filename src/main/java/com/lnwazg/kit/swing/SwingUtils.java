@@ -12,6 +12,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.SimpleAttributeSet;
@@ -141,6 +142,36 @@ public class SwingUtils
     }
     
     /**
+     * 根据扩展名过滤去选取文件
+     * @author nan.li
+     * @param parentComponent
+     * @param title
+     * @param suffix
+     * @return
+     */
+    public static File chooseFile(Component parentComponent, String title, String suffix)
+    {
+        JFileChooser jfc = new JFileChooser();
+        jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        jfc.setFileFilter(new FileNameExtensionFilter("." + suffix, suffix));
+        jfc.showDialog(parentComponent, title);
+        return jfc.getSelectedFile();
+    }
+    
+    public static File chooseFile(Component parentComponent, String title, File curDir, String suffix)
+    {
+        JFileChooser jfc = new JFileChooser();
+        jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        jfc.setFileFilter(new FileNameExtensionFilter("." + suffix, suffix));
+        if (curDir != null)
+        {
+            jfc.setCurrentDirectory(curDir);
+        }
+        jfc.showDialog(parentComponent, title);
+        return jfc.getSelectedFile();
+    }
+    
+    /**
      * 选择一个目录
      * @author nan.li
      * @param parentComponent
@@ -154,7 +185,7 @@ public class SwingUtils
         jfc.showDialog(parentComponent, title);
         return jfc.getSelectedFile();
     }
-
+    
     /** 
      * 启动标准swing窗体
      * @param targetFrame  传入的JFrame对象

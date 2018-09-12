@@ -48,6 +48,8 @@ public final class ParseXML
         try
         {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            dbf.setIgnoringElementContentWhitespace(true);
+            dbf.setIgnoringComments(true);
             DocumentBuilder db = dbf.newDocumentBuilder();
             // 将获取的字符串解析成一个doc
             return db.parse(new InputSource(new StringReader(xmlStr)));
@@ -74,6 +76,8 @@ public final class ParseXML
         try
         {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            dbf.setIgnoringElementContentWhitespace(true);
+            dbf.setIgnoringComments(true);
             DocumentBuilder db = dbf.newDocumentBuilder();
             xmlDoc = db.parse(new File(filePath));
         }

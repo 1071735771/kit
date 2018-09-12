@@ -60,6 +60,19 @@ public class FrontObj
     }
     
     /**
+     * 返回成功的对象
+     * @author nan.li
+     * @param msg
+     * @return
+     */
+    public FrontObj success(String errmsg)
+    {
+        this.errno = RESULTCODE_SUCCESS;
+        this.errmsg = errmsg;
+        return this;
+    }
+    
+    /**
      * 返回失败的对象，用默认的返回码：10001
      * 
      * @author nan.li

@@ -18,7 +18,7 @@ public abstract class PromptJob implements Job
     public void execute(JobExecutionContext context)
         throws JobExecutionException
     {
-        Logs.i(String.format("调用JOB任务【%s】在：%s", getClass().getCanonicalName(), DateUtils.getCurStandardDateTimeStr()));
+        Logs.i(String.format("调用JOB任务【%s】在：%s", getClass().getCanonicalName(), DateUtils.getNowDateTimeStr()));
         executeCustom(context);
     }
     

@@ -14,8 +14,10 @@ import javax.swing.text.StyleConstants;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.CharEncoding;
 
 import com.lnwazg.kit.date.DateUtils;
+import com.lnwazg.kit.exception.StackTraceKit;
 import com.lnwazg.kit.executor.ExecMgr;
 
 /**
@@ -31,6 +33,21 @@ import com.lnwazg.kit.executor.ExecMgr;
  */
 public class Logs
 {
+    /**
+     * 日志中是否加入时间戳的开关
+     */
+    public static boolean TIMESTAMP_LOG_SWITCH = false;
+    
+    /**
+     * 是否生成文件日志的开关
+     */
+    public static boolean FILE_LOG_SWITCH = false;
+    
+    /**
+     * 日志文件的编码
+     */
+    private static final String LOG_FILE_ENCODING = CharEncoding.UTF_8;
+    
     private static final String LOG_LEVEL_DEBUG = "D";
     
     private static final String LOG_LEVEL_INFO = "I";
@@ -42,7 +59,7 @@ public class Logs
     /**
      * 没有日志级别的日志
      */
-    private static final String LOG_LEVEL_NONE = "NONE";
+    private static final String LOG_LEVEL_NONE = " ";
     
     /**
      * 日志文件的基础目录<br>
@@ -89,7 +106,7 @@ public class Logs
      */
     public static void log(Object s)
     {
-        log(s, LOG_LEVEL_NONE);
+        log(s, LOG_LEVEL_NONE, null);
     }
     
     public static void log(String... strs)
@@ -104,7 +121,7 @@ public class Logs
     
     public static void d(Object s)
     {
-        log(s, LOG_LEVEL_DEBUG);
+        log(s, LOG_LEVEL_DEBUG, null);
     }
     
     public static void info(Object s)
@@ -114,7 +131,7 @@ public class Logs
     
     public static void i(Object s)
     {
-        log(s, LOG_LEVEL_INFO);
+        log(s, LOG_LEVEL_INFO, null);
     }
     
     public static void warn(Object s)
@@ -124,7 +141,7 @@ public class Logs
     
     public static void w(Object s)
     {
-        log(s, LOG_LEVEL_WARN);
+        log(s, LOG_LEVEL_WARN, null);
     }
     
     public static void error(Object s)
@@ -135,7 +152,13 @@ public class Logs
     public static void e(Object s)
     {
         //入口1
-        log(s, LOG_LEVEL_ERROR);
+        log(s, LOG_LEVEL_ERROR, null);
+    }
+    
+    public static void e(Throwable e)
+    {
+        //入口1
+        e(null, e);
     }
     
     public static void e(String logMessage, boolean writeToFile)
@@ -169,11 +192,7 @@ public class Logs
      */
     public static void error(final String logMessage, final Throwable e, boolean writeToFile)
     {
-        log(logMessage, LOG_LEVEL_ERROR);
-        if (e != null)
-        {
-            e.printStackTrace();
-        }
+        log(logMessage, LOG_LEVEL_ERROR, e);
         if (writeToFile)
         {
             //启用线程执行，不阻塞性能
@@ -214,7 +233,7 @@ public class Logs
                 file.createNewFile();
             }
             String logContent = String.format("%s %s %s %s\r\n", genPrefixInfo(), logMessage, e != null ? e.getMessage() : "", e != null ? e.getCause() : "");
-            FileUtils.write(file, logContent, true);
+            FileUtils.write(file, logContent, LOG_FILE_ENCODING, true);
         }
         catch (IOException ex)
         {
@@ -230,15 +249,22 @@ public class Logs
     private static String genPrefixInfo()
     {
         StringBuilder sBuilder = new StringBuilder();
-        sBuilder.append("[").append(DateUtils.getFormattedTimeStr(DateUtils.DEFAULT_DATE_TIME_FORMAT_PATTERN)).append("]");
+        sBuilder.append("[").append(DateUtils.getNowFormattedDateTimeStr(DateUtils.DEFAULT_DATE_TIME_FORMAT_PATTERN)).append("]");
         return sBuilder.toString();
     }
     
-    private static void log(Object content, String logLevel)
+    private static void log(Object content, String logLevel, Throwable e)
     {
-        String logMessage = String.format("[%s] %s", logLevel, content == null ? "null" : content.toString());
+        String logMessage = String.format("[%s]%s %s%s",
+            logLevel,
+            (TIMESTAMP_LOG_SWITCH ? " [" + DateUtils.getNowDateTimeStr() + "]" : ""),
+            content == null ? "" : content.toString() + " ",
+            e != null ? e.getMessage() : "");
+            
+        //消息格式如下：
+        //[E] [2017-08-06 17:41:59] 手机号非法！
         
-        //本地的输出
+        //1.本地的输出
         if (logLevel == LOG_LEVEL_DEBUG || logLevel == LOG_LEVEL_INFO)
         {
             System.out.println(logMessage);
@@ -249,13 +275,17 @@ public class Logs
         }
         else if (logLevel == LOG_LEVEL_ERROR)
         {
-            if (content instanceof Throwable)
+            if (content != null && content instanceof Throwable)
             {
                 ((Throwable)content).printStackTrace();
             }
             else
             {
                 System.err.println(logMessage);
+                if (e != null)
+                {
+                    e.printStackTrace();
+                }
             }
         }
         else if (logLevel == LOG_LEVEL_NONE)
@@ -263,70 +293,162 @@ public class Logs
             System.out.println(content);
         }
         
-        //其他位置的输出
-        
-        //准备颜色
-        Color localColor = Color.black;
-        switch (logLevel)
+        //2.文件日志的输出
+        //必须按顺序输出
+        if (FILE_LOG_SWITCH)
         {
-            case LOG_LEVEL_DEBUG:
-                localColor = new Color(255, 204, 153);//暗金色
-                break;
-            case LOG_LEVEL_INFO:
-                localColor = new Color(153, 204, 0);//翠绿
-                break;
-            case LOG_LEVEL_WARN:
-                localColor = Color.pink;//粉红
-                break;
-            case LOG_LEVEL_ERROR:
-                localColor = Color.red;//大红
-                break;
-            case LOG_LEVEL_NONE:
-                localColor = Color.green;//绿色
-                break;
-        }
-        //开始输出
-        if (jTextAreaDests.size() > 0)
-        {
-            for (JTextArea jTextArea : jTextAreaDests)
+            //需要生成日志的时候，才去生成
+            ExecMgr.singleExec.execute(new Runnable()
             {
-                ExecMgr.guiExec.execute(() -> {
-                    if (jTextArea.getText().length() >= 10000)
+                public void run()
+                {
+                    //logs/all.log           任何日志都输出  包含所有种类的日志
+                    //debug\info\warn\error  只记录对应种类的日志
+                    //这样可以保持日志文件的纯粹性，更方便定位问题
+                    switch (logLevel)
                     {
-                        jTextArea.setText("");
+                        case LOG_LEVEL_NONE:
+                            appendLogToFile("all", logMessage, e);
+                            break;
+                        case LOG_LEVEL_DEBUG:
+                            appendLogToFile("all", logMessage, e);
+                            appendLogToFile("debug", logMessage, e);
+                            break;
+                        case LOG_LEVEL_INFO:
+                            appendLogToFile("all", logMessage, e);
+                            //                        appendLogToFile("debug", logMessage, e);
+                            appendLogToFile("info", logMessage, e);
+                            break;
+                        case LOG_LEVEL_WARN:
+                            appendLogToFile("all", logMessage, e);
+                            //                        appendLogToFile("debug", logMessage, e);
+                            //                        appendLogToFile("info", logMessage, e);
+                            appendLogToFile("warn", logMessage, e);
+                            break;
+                        case LOG_LEVEL_ERROR:
+                            appendLogToFile("all", logMessage, e);
+                            //                        appendLogToFile("debug", logMessage, e);
+                            //                        appendLogToFile("info", logMessage, e);
+                            //                        appendLogToFile("warn", logMessage, e);
+                            appendLogToFile("error", logMessage, e);
+                            break;
+                        default:
+                            break;
                     }
-                    jTextArea.append(logMessage + "\r\n");
-                    jTextArea.setCaretPosition(jTextArea.getText().length());
-                });
-            }
-        }
-        if (jTextPaneDests.size() > 0)
-        {
-            for (JTextPane jTextPane : jTextPaneDests)
-            {
-                final Color color = localColor;
-                ExecMgr.guiExec.execute(() -> {
-                    Document document = jTextPane.getDocument();
-                    if (document.getLength() >= 10000)
-                    {
-                        //及时清空，防止日志容器爆掉
-                        jTextPane.setText(null);
-                    }
-                    try
-                    {
-                        SimpleAttributeSet attributeSet = new SimpleAttributeSet();
-                        StyleConstants.setForeground(attributeSet, color);
-                        document.insertString(document.getLength(), logMessage + "\r\n", attributeSet);
-                        jTextPane.setCaretPosition(jTextPane.getDocument().getLength());
-                    }
-                    catch (Exception e)
-                    {
-                        e.printStackTrace();
-                    }
-                });
-            }
+                }
+            });
         }
         
+        //此处有性能瓶颈，因此做异步处理
+        ExecMgr.singleExec.execute(() -> {
+            //3.其他位置的输出
+            //准备颜色
+            Color localColor = Color.black;
+            switch (logLevel)
+            {
+                case LOG_LEVEL_DEBUG:
+                    localColor = new Color(255, 204, 153);//暗金色
+                    break;
+                case LOG_LEVEL_INFO:
+                    localColor = new Color(153, 204, 0);//翠绿
+                    break;
+                case LOG_LEVEL_WARN:
+                    localColor = Color.pink;//粉红
+                    break;
+                case LOG_LEVEL_ERROR:
+                    localColor = Color.red;//大红
+                    break;
+                case LOG_LEVEL_NONE:
+                    localColor = Color.green;//绿色
+                    break;
+            }
+            //开始输出
+            if (jTextAreaDests.size() > 0)
+            {
+                for (JTextArea jTextArea : jTextAreaDests)
+                {
+                    ExecMgr.guiExec.execute(() -> {
+                        if (jTextArea.getText().length() >= 10000)
+                        {
+                            jTextArea.setText("");
+                        }
+                        jTextArea.append(logMessage + "\r\n");
+                        jTextArea.setCaretPosition(jTextArea.getText().length());
+                    });
+                }
+            }
+            if (jTextPaneDests.size() > 0)
+            {
+                for (JTextPane jTextPane : jTextPaneDests)
+                {
+                    final Color color = localColor;
+                    
+                    ExecMgr.guiExec.execute(() -> {
+                        Document document = jTextPane.getDocument();
+                        if (document.getLength() >= 10000)
+                        {
+                            //及时清空，防止日志容器爆掉
+                            jTextPane.setText(null);
+                        }
+                        try
+                        {
+                            SimpleAttributeSet attributeSet = new SimpleAttributeSet();
+                            StyleConstants.setForeground(attributeSet, color);
+                            document.insertString(document.getLength(), logMessage + "\r\n", attributeSet);
+                            jTextPane.setCaretPosition(jTextPane.getDocument().getLength());
+                        }
+                        catch (Exception e1)
+                        {
+                            e1.printStackTrace();
+                        }
+                    });
+                }
+            }
+        });
     }
     
+    /**
+     * 追加日志到文件中
+     * @author nan.li
+     * @param logFileName
+     * @param logMessage
+     * @param e
+     */
+    private static void appendLogToFile(String logFileName, String logMessage, Throwable e)
+    {
+        try
+        {
+            String name = "logs" + File.separator + logFileName + ".log";
+            File logFile = new File(name);
+            if (!logFile.exists())
+            {
+                logFile.getParentFile().mkdirs();
+                logFile.createNewFile();
+            }
+            FileUtils.write(logFile, logMessage + "\r\n", LOG_FILE_ENCODING, true);
+            if (e != null)
+            {
+                String stackTrace = StackTraceKit.getStackTraceString(e);
+                FileUtils.write(logFile, stackTrace, LOG_FILE_ENCODING, true);
+            }
+        }
+        catch (IOException ex)
+        {
+            ex.printStackTrace();
+        }
+    }
+    
+    //                        if (e != null)
+    //                        {
+    //                            //将错误堆栈打印到日志文件中
+    //                            PrintWriter p = new PrintWriter(new FileOutputStream(all, true));
+    //                            e.printStackTrace(p);
+    //                            p.flush();
+    //                            StreamUtils.close(p);
+    //                            
+    //                            p = new PrintWriter(new FileOutputStream(err, true));
+    //                            e.printStackTrace(p);
+    //                            p.flush();
+    //                            StreamUtils.close(p);
+    //                        }
 }

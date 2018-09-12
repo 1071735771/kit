@@ -1,6 +1,7 @@
 package com.lnwazg.kit.list;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -22,19 +23,15 @@ public class Lists
     }
     
     /**
-     * 快速生成一个List
+     * 快速生成一个List，支持泛型操作
      * @author nan.li
-     * @param objects
+     * @param ts
      * @return
      */
-    public static List<Object> asList(Object... objects)
+    @SafeVarargs
+    public static <T> List<T> asList(T... ts)
     {
-        List<Object> ret = new ArrayList<>();
-        for (Object o : objects)
-        {
-            ret.add(o);
-        }
-        return ret;
+        return Arrays.asList(ts);
     }
     
     public static boolean isNotEmpty(List<?> list)
@@ -44,5 +41,10 @@ public class Lists
             return true;
         }
         return false;
+    }
+    
+    public static boolean isEmpty(List<?> list)
+    {
+        return !isNotEmpty(list);
     }
 }

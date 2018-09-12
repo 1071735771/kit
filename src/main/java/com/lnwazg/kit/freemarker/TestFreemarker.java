@@ -68,7 +68,7 @@ public class TestFreemarker
         }
     }
     
-    //    @TestCase
+        @TestCase
     void test2()
     {
         String result = FreeMkKit.format("用户名：${user};\nURL：    ${url};\n姓名： 　${name}", "user", "lavasoft", "url", "http://www.baidu.com/", "name", "百度");

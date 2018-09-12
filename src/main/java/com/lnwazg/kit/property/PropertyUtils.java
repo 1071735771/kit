@@ -3,6 +3,8 @@ package com.lnwazg.kit.property;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +14,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.CharEncoding;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 
 import com.lnwazg.kit.describe.DescribeUtils;
 import com.lnwazg.kit.io.StreamUtils;
@@ -39,6 +42,138 @@ public class PropertyUtils
      * 注释的前缀
      */
     private static final String[] ANNO_PREFIXS = {"#", "//"};
+    
+    /**
+     * 从网络加载配置信息
+     * @author nan.li
+     * @param url
+     * @return
+     */
+    public static Map<String, String> load(URL url)
+    {
+        Map<String, String> result = null;
+        if (url != null)
+        {
+            try
+            {
+                StopWatch stopWatch = new StopWatch();
+                stopWatch.start();
+                result = load(url.openConnection().getInputStream());
+                Logs.i("Resolve remote url properties cost " + stopWatch.getTime() + " ms");
+            }
+            catch (MalformedURLException e)
+            {
+                e.printStackTrace();
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+        return result;
+    }
+    
+    /**
+     * 从指定的文件位置加载配置文件，不推荐使用，因为一旦项目达成一个可执行jar包，便不支持这种加载方式
+     * @author nan.li
+     * @param filePath
+     * @param encoding
+     * @return
+     */
+    @Deprecated
+    public static Map<String, String> load(String filePath, String encoding)
+    {
+        return load(new File(filePath), encoding);
+    }
+    
+    /**
+     * 从指定的文件位置加载配置文件，不推荐使用，因为一旦项目达成一个可执行jar包，便不支持这种加载方式
+     * @author nan.li
+     * @param filePath
+     * @param encoding
+     * @return
+     */
+    @Deprecated
+    public static Map<String, String> load(String filePath)
+    {
+        return load(filePath, DEFAULT_ENCODING);
+    }
+    
+    /**
+     * 从指定的文件位置加载配置文件，不推荐使用，因为一旦项目达成一个可执行jar包，便不支持这种加载方式
+     * @author nan.li
+     * @param filePath
+     * @param encoding
+     * @return
+     */
+    @Deprecated
+    public static Map<String, String> load(File propertyFile)
+    {
+        return load(propertyFile, DEFAULT_ENCODING);
+    }
+    
+    /**
+     * 从指定的文件位置加载配置文件，不推荐使用，因为一旦项目达成一个可执行jar包，便不支持这种加载方式
+     * @author nan.li
+     * @param filePath
+     * @param encoding
+     * @return
+     */
+    @Deprecated
+    public static Map<String, String> load(File propertyFile, String encoding)
+    {
+        Map<String, String> resMap = new LinkedHashMap<String, String>();//让读取出来的map保持插入顺序显示
+        if (!propertyFile.exists())
+        {
+            Logs.e("加载属性文件失败！文件名:" + propertyFile.getName());
+            return resMap;
+        }
+        try
+        {
+            List<String> list = FileUtils.readLines(propertyFile, encoding);
+            int annoNo = 0;
+            for (String line : list)
+            {
+                String lineTrim = StringUtils.trim(line);
+                if (StringUtils.isBlank(lineTrim))
+                {
+                    continue;
+                }
+                if (isAnno(lineTrim))
+                {
+                    resMap.put("#" + annoNo++, lineTrim);
+                }
+                else
+                {
+                    //从第一个等于号开始作为分隔符
+                    int equalIndex = StringUtils.indexOf(lineTrim, "=");
+                    if (equalIndex != -1)
+                    {
+                        String key = StringUtils.substring(lineTrim, 0, equalIndex);
+                        String value = StringUtils.substring(lineTrim, equalIndex + "=".length());
+                        resMap.put(key, value);
+                    }
+                    //其他情况，则全部都是非法配置，直接忽略即可
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        return resMap;
+    }
+    
+    /**
+     * 加载指定数据流处的配置文件
+     * @author nan.li
+     * @param inputStream
+     * @return
+     */
+    public static Map<String, String> load(InputStream inputStream)
+    {
+        return load(inputStream, DEFAULT_ENCODING);
+    }
     
     public static Map<String, String> load(InputStream inputStream, String encoding)
     {
@@ -84,76 +219,6 @@ public class PropertyUtils
         finally
         {
             StreamUtils.close(inputStream);
-        }
-        return resMap;
-    }
-    
-    /**
-     * 加载指定数据流处的配置文件
-     * @author nan.li
-     * @param inputStream
-     * @return
-     */
-    public static Map<String, String> load(InputStream inputStream)
-    {
-        return load(inputStream, DEFAULT_ENCODING);
-    }
-    
-    public static Map<String, String> load(String filePath, String encoding)
-    {
-        return load(new File(filePath), encoding);
-    }
-    
-    public static Map<String, String> load(String filePath)
-    {
-        return load(filePath, DEFAULT_ENCODING);
-    }
-    
-    public static Map<String, String> load(File propertyFile)
-    {
-        return load(propertyFile, DEFAULT_ENCODING);
-    }
-    
-    public static Map<String, String> load(File propertyFile, String encoding)
-    {
-        Map<String, String> resMap = new LinkedHashMap<String, String>();//让读取出来的map保持插入顺序显示
-        if (!propertyFile.exists())
-        {
-            Logs.e("加载属性文件失败！文件名:" + propertyFile.getName());
-            return resMap;
-        }
-        try
-        {
-            List<String> list = FileUtils.readLines(propertyFile, encoding);
-            int annoNo = 0;
-            for (String line : list)
-            {
-                String lineTrim = StringUtils.trim(line);
-                if (StringUtils.isBlank(lineTrim))
-                {
-                    continue;
-                }
-                if (isAnno(lineTrim))
-                {
-                    resMap.put("#" + annoNo++, lineTrim);
-                }
-                else
-                {
-                    //从第一个等于号开始作为分隔符
-                    int equalIndex = StringUtils.indexOf(lineTrim, "=");
-                    if (equalIndex != -1)
-                    {
-                        String key = StringUtils.substring(lineTrim, 0, equalIndex);
-                        String value = StringUtils.substring(lineTrim, equalIndex + "=".length());
-                        resMap.put(key, value);
-                    }
-                    //其他情况，则全部都是非法配置，直接忽略即可
-                }
-            }
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
         }
         return resMap;
     }
@@ -299,4 +364,5 @@ public class PropertyUtils
         set("D:\\2012\\trunk\\AutoShadow\\res\\config.properties", "aaa", "123");
         set("D:\\2012\\trunk\\AutoShadow\\res\\config.properties", "aaa", "234");
     }
+    
 }

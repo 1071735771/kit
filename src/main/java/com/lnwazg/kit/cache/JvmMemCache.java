@@ -13,12 +13,12 @@ import java.util.concurrent.TimeUnit;
  * @author nan.li
  * @version 2016年4月14日
  */
-public class JvmMemCache
+public class JvmMemCache<V>
 {
     /**
      * 记录的对象的map
      */
-    Map<String, Object> objMap = new ConcurrentHashMap<>();
+    Map<String, V> objMap = new ConcurrentHashMap<>();
     
     /**
      * 记录的放入时间的map
@@ -34,7 +34,7 @@ public class JvmMemCache
      * @param minutes
      * @return
      */
-    public Object get(String key, int failTime, TimeUnit timeUnit)
+    public V get(String key, int failTime, TimeUnit timeUnit)
     {
         // 如果缓存表中压根就没有，那么忽略之
         if (!objMap.containsKey(key) || !recordTimestampMap.containsKey(key))
@@ -78,7 +78,7 @@ public class JvmMemCache
         }
     }
     
-    public Object get(String key)
+    public V get(String key)
     {
         return objMap.get(key);
     }
@@ -90,7 +90,7 @@ public class JvmMemCache
      * @param key
      * @param obj
      */
-    public void put(String key, Object obj)
+    public void put(String key, V obj)
     {
         objMap.put(key, obj);
         recordTimestampMap.put(key, System.currentTimeMillis());
@@ -98,7 +98,6 @@ public class JvmMemCache
     
     /**
      * 检查缓存对象中是否有某个键
-     * 
      * @author nan.li
      * @param key
      * @return
@@ -106,5 +105,17 @@ public class JvmMemCache
     public boolean containsKey(String key)
     {
         return objMap.containsKey(key);
+    }
+    
+    /**
+     * 检查缓存对象中是否有某个键<br>
+     * 指定了缓存失效时间
+     * @author nan.li
+     * @param key
+     * @return
+     */
+    public boolean containsKey(String key, int failTime, TimeUnit timeUnit)
+    {
+        return get(key, failTime, timeUnit) != null;
     }
 }

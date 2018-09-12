@@ -10,7 +10,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.gson.JsonSyntaxException;
-import com.lnwazg.kit.gson.GsonHelper;
+import com.lnwazg.kit.gson.GsonKit;
 import com.lnwazg.kit.security.SecurityUtils;
 
 /**
@@ -62,7 +62,7 @@ public class GsonCfgMgr
         //输出的时候，进行格式美化
         try
         {
-            FileUtils.writeStringToFile(userFile, GsonHelper.prettyGson.toJson(object), UTF8_ENCODING);
+            FileUtils.writeStringToFile(userFile, GsonKit.prettyGson.toJson(object), UTF8_ENCODING);
         }
         catch (IOException e)
         {
@@ -154,7 +154,7 @@ public class GsonCfgMgr
         //此处输出为一个AES加密后的字符串，因此gson自身采用默认的紧凑输出，是没有问题的！
         try
         {
-            FileUtils.writeStringToFile(userFile, SecurityUtils.aesEncode(GsonHelper.gson.toJson(object), AES_KEY), UTF8_ENCODING);
+            FileUtils.writeStringToFile(userFile, SecurityUtils.aesEncode(GsonKit.gson.toJson(object), AES_KEY), UTF8_ENCODING);
         }
         catch (IOException e)
         {
@@ -195,7 +195,7 @@ public class GsonCfgMgr
         {
             try
             {
-                instance = GsonHelper.gson.fromJson(FileUtils.readFileToString(toReadFile, UTF8_ENCODING), clazz);
+                instance = GsonKit.gson.fromJson(FileUtils.readFileToString(toReadFile, UTF8_ENCODING), clazz);
             }
             catch (IOException e)
             {
@@ -235,7 +235,7 @@ public class GsonCfgMgr
         {
             try
             {
-                instance = GsonHelper.gson.fromJson(SecurityUtils.aesDecode(FileUtils.readFileToString(toReadFile, UTF8_ENCODING), AES_KEY), clazz);
+                instance = GsonKit.gson.fromJson(SecurityUtils.aesDecode(FileUtils.readFileToString(toReadFile, UTF8_ENCODING), AES_KEY), clazz);
             }
             catch (IOException e)
             {

@@ -51,7 +51,7 @@ public class JobLoader
     public static void loadPackageJob(String packageName)
     {
         //尝试取加载该包下面的所有配置信息
-        List<Class<?>> classList = ClassKit.getClasses(packageName);
+        List<Class<?>> classList = ClassKit.getPackageAllClasses(packageName);
         if (classList.size() > 0)
         {
             Logs.i("根据JOB_SCAN_PACKAGE加载定时器配置...");

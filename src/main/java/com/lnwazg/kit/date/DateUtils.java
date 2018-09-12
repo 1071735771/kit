@@ -12,97 +12,154 @@ import java.util.concurrent.TimeUnit;
 import com.lnwazg.kit.log.Logs;
 
 /**
- * 时间工具类
- * 
- * @author lnwazg
- * @version [版本号, 2011-12-17]
- * @see [相关类/方法]
- * @since [产品/模块版本]
+ * 日期时间工具类
+ * @author nan.li
+ * @version 2017年8月3日
  */
 public class DateUtils
 {
+    /**
+     * 标准日期时间格式
+     */
     public static final String DEFAULT_DATE_TIME_FORMAT_PATTERN = "yyyy-MM-dd HH:mm:ss";
     
+    /**
+     * 日期时间格式，时间精确到分钟
+     */
     public static final String DEFAULT_DATE_TIME_HHmm_FORMAT_PATTERN = "yyyy-MM-dd HH:mm";
     
+    /**
+     * 日期时间格式，时间精确到小时
+     */
     public static final String DEFAULT_DATE_TIME_HH_FORMAT_PATTERN = "yyyy-MM-dd HH";
     
+    /**
+     * 标准日期格式
+     */
     public static final String DEFAULT_DATE_FORMAT_PATTERN = "yyyy-MM-dd";
     
-    public static final String DEFAULT_DATE_FORMAT_PATTERN2 = "yyyyMMdd";
+    /**
+     * 日期格式，无连接符
+     */
+    public static final String DEFAULT_DATE_FORMAT_PATTERN_NO_CONNECTOR = "yyyyMMdd";
     
+    /**
+     * 标准时间格式
+     */
     public static final String DEFAULT_TIME_FORMAT_PATTERN = "HH:mm:ss";
     
+    /**
+     * 时间格式，精确到分钟
+     */
     public static final String DEFAULT_TIME_HHmm_FORMAT_PATTERN = "HH:mm";
     
     /**
-     * 获取指定格式的时间字符串
-     * 
-     * @return
-     * @see [类、类#方法、类#成员]
+     * 日期时间格式，年月日时分秒，无空格，无连接符<br>
+     * 适用于文件名的日期时间格式化<br>
+     * 例如：20170702220512
      */
-    public static String getFormattedTimeStr(String pattern)
-    {
-        return getFormattedTimeStr(pattern, new Date());
-    }
+    public static final String DEFAULT_FILE_DATE_TIME_FORMAT_PATTERN = "yyyyMMddHHmmss";
     
     /**
-     * 获取指定格式的时间字符串 格式化指定日期
-     * 
-     * @param pattern
-     * @param date
-     * @return
-     * @see [类、类#方法、类#成员]
-     */
-    public static String getFormattedTimeStr(String pattern, Date date)
-    {
-        return new SimpleDateFormat(pattern).format(date);
-    }
-    
-    /**
-     * 获取当前日期，例如：20150410
-     * @return
-     * @see [类、类#方法、类#成员]
-     */
-    public static String getFormattedDateStr()
-    {
-        return getFormattedTimeStr(DEFAULT_DATE_FORMAT_PATTERN2);
-    }
-    
-    /**
-     * 获取当前日期时间，例如：2015-04-10 12:10:13
-     * @author Administrator
-     * @return
-     */
-    public static String getCurStandardDateTimeStr()
-    {
-        return getFormattedTimeStr(DEFAULT_DATE_TIME_FORMAT_PATTERN);
-    }
-    
-    /**
-     * 获取当前日期，例如：2015-04-10
-     * @return
-     * @see [类、类#方法、类#成员]
-     */
-    public static String getSimpleCurrentDate()
-    {
-        return getFormattedTimeStr(DEFAULT_DATE_FORMAT_PATTERN);
-    }
-    
-    /**
-     * 根据指定的日期格式，将参数日期字符串转换成Date对象
-     * 
+     * 获取当前时间的Calendar对象
      * @author nan.li
-     * @param dateTimeStr
+     * @return
+     */
+    public static Calendar getNowCalendar()
+    {
+        return Calendar.getInstance();
+    }
+    
+    /**
+     * 获取明天时间的Calandar对象
+     * @author nan.li
+     * @return
+     */
+    public static Calendar getTomorrowCalendar()
+    {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_YEAR, 1);
+        return calendar;
+    }
+    
+    /**
+     * 获取后天时间的Calandar对象
+     * @author nan.li
+     * @return
+     */
+    public static Calendar getAfterTomorrowCalendar()
+    {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_YEAR, 2);
+        return calendar;
+    }
+    
+    /**
+     * 获取当前时间的Date对象
+     * @author nan.li
+     * @return
+     */
+    public static Date getNowDate()
+    {
+        return new Date();
+    }
+    
+    /**
+     * 获取明天时间的Date对象
+     * @author nan.li
+     * @return
+     */
+    public static Date getTomorrowDate()
+    {
+        return getTomorrowCalendar().getTime();
+    }
+    
+    /**
+     * 获取后天时间的Date对象
+     * @author nan.li
+     * @return
+     */
+    public static Date getAfterTomorrowDate()
+    {
+        return getAfterTomorrowCalendar().getTime();
+    }
+    
+    /**
+     * 是否是日期格式的字符串
+     * @author nan.li
+     * @param paramString
+     * @return
+     */
+    public static boolean isDateStr(String paramString)
+    {
+        return parseStr2DateTime(paramString, DEFAULT_DATE_FORMAT_PATTERN) != null;
+    }
+    
+    /**
+     * 是否是日期时间格式的字符串
+     * @author nan.li
+     * @param paramString
+     * @return
+     */
+    public static boolean isDateTimeStr(String paramString)
+    {
+        return parseStr2DateTime(paramString, DEFAULT_DATE_TIME_FORMAT_PATTERN) != null;
+    }
+    
+    /**
+     * 根据指定的Date格式，将参数日期字符串转换成Date对象<br>
+     * 若无法成功转换，则返回null
+     * @author nan.li
+     * @param paramString
      * @param pattern
      * @return
      */
-    public static Date parseDate(String dateTimeStr, String pattern)
+    public static Date parseStr2DateTime(String paramString, String pattern)
     {
         DateFormat dateFormat = new SimpleDateFormat(pattern);
         try
         {
-            Date date = dateFormat.parse(dateTimeStr);
+            Date date = dateFormat.parse(paramString);
             return date;
         }
         catch (ParseException e)
@@ -112,17 +169,137 @@ public class DateUtils
     }
     
     /**
-     * 计算时间差
+     * 获取当前无连接符的日期，例如：20150410
+     * @return
+     * @see [类、类#方法、类#成员]
+     */
+    public static String getNowDateNoConnectorStr()
+    {
+        return getNowFormattedDateTimeStr(DEFAULT_DATE_FORMAT_PATTERN_NO_CONNECTOR);
+    }
+    
+    /**
+     * 获取当前日期，有连接符，例如：2015-04-10
+     * @return
+     * @see [类、类#方法、类#成员]
+     */
+    public static String getNowDateStr()
+    {
+        return getNowFormattedDateTimeStr(DEFAULT_DATE_FORMAT_PATTERN);
+    }
+    
+    /**
+     * 获取当前日期时间，有连接符，例如：2015-04-10 12:10:13
      * @author Administrator
-     * @param planEnd
-     * @param planBegin
+     * @return
+     */
+    public static String getNowDateTimeStr()
+    {
+        return getNowFormattedDateTimeStr(DEFAULT_DATE_TIME_FORMAT_PATTERN);
+    }
+    
+    /**
+     * 获取当前日期时间，适用于文件命名的，例如：20170702220512
+     * @author nan.li
+     * @return
+     */
+    public static String getNowFileDateTimeStr()
+    {
+        return getNowFormattedDateTimeStr(DEFAULT_FILE_DATE_TIME_FORMAT_PATTERN);
+    }
+    
+    /**
+     * 按指定格式格式化当前日期时间的字符串
+     * @return
+     * @see [类、类#方法、类#成员]
+     */
+    public static String getNowFormattedDateTimeStr(String pattern)
+    {
+        return getFormattedDateTimeStr(pattern, new Date());
+    }
+    
+    /**
+     * 按指定格式， 格式化指定日期，返回格式化后的字符串
+     * @param pattern
+     * @param date
+     * @return
+     * @see [类、类#方法、类#成员]
+     */
+    public static String getFormattedDateTimeStr(String pattern, Date date)
+    {
+        return new SimpleDateFormat(pattern).format(date);
+    }
+    
+    /**
+     * 计算日期时间的时间差，并且取结果的绝对值
+     * @author nan.li
+     * @param end
+     * @param begin
      * @param timeUnit
      * @return
      */
-    public static long timeDiff(Calendar planEnd, Calendar planBegin, TimeUnit timeUnit)
+    public static long timeDiffAbs(Calendar end, Calendar begin, TimeUnit timeUnit)
+    {
+        return Math.abs(timeDiff(end, begin, timeUnit));
+    }
+    
+    /**
+     * 计算日期时间的时间差
+     * @author nan.li
+     * @param end
+     * @param begin
+     * @param timeUnit
+     * @return
+     */
+    public static long timeDiff(Calendar end, Calendar begin, TimeUnit timeUnit)
     {
         long timeDiff = 0L;
-        long diffMills = planEnd.getTime().getTime() - planBegin.getTime().getTime();
+        long diffMills = end.getTime().getTime() - begin.getTime().getTime();
+        switch (timeUnit)
+        {
+            case DAYS:
+                timeDiff = diffMills / (1000 * 60 * 60 * 24);
+                break;
+            case HOURS:
+                timeDiff = diffMills / (1000 * 60 * 60);
+                break;
+            case MINUTES:
+                timeDiff = diffMills / (1000 * 60);
+                break;
+            case SECONDS:
+                timeDiff = diffMills / (1000);
+                break;
+            default:
+                break;
+        }
+        return timeDiff;
+    }
+    
+    /**
+     * 计算日期时间的时间差，并且取结果的绝对值
+     * @author nan.li
+     * @param end
+     * @param begin
+     * @param timeUnit
+     * @return
+     */
+    public static long timeDiffAbs(Date end, Date begin, TimeUnit timeUnit)
+    {
+        return Math.abs(timeDiff(end, begin, timeUnit));
+    }
+    
+    /**
+     * 计算日期时间的时间差
+     * @author nan.li
+     * @param end
+     * @param begin
+     * @param timeUnit
+     * @return
+     */
+    public static long timeDiff(Date end, Date begin, TimeUnit timeUnit)
+    {
+        long timeDiff = 0L;
+        long diffMills = end.getTime() - begin.getTime();
         switch (timeUnit)
         {
             case DAYS:
@@ -145,18 +322,98 @@ public class DateUtils
     }
     
     /**
-     * 获取当前时间的Calendar对象
+     * 获取时间差的描述信息
      * @author nan.li
+     * @param paramDate
      * @return
      */
-    public static Calendar getCurrentCalendar()
+    public static String getDateTimeDiffersNowRemark(Date paramDate)
     {
-        return Calendar.getInstance();
+        if (paramDate == null)
+        {
+            return "-1";
+        }
+        //时间差的秒数
+        long diffs = (System.currentTimeMillis() - paramDate.getTime()) / 1000;
+        String suffix = "前";
+        String unit = "秒";
+        if (diffs < 0)
+        {
+            diffs = 0 - diffs;
+            suffix = "后";
+        }
+        if (diffs > 60)
+        {
+            //需要转换成分钟显示
+            unit = "分钟";
+            diffs = diffs / 60;
+            if (diffs > 60)
+            {
+                //需要转换成小时显示
+                unit = "小时";
+                diffs = diffs / 60;
+                if (diffs > 24)
+                {
+                    //需要转换成天
+                    unit = "天";
+                    diffs = diffs / 24;
+                    if (diffs > 365)
+                    {
+                        //需要转换成年显示
+                        unit = "年";
+                        diffs = diffs / 365;
+                        //不管有多少年，有多少年展示多少年！
+                    }
+                    else
+                    {
+                        //按照天展示即可
+                    }
+                }
+                else
+                {
+                    //按照小时展示即可
+                }
+            }
+            else
+            {
+                //按照分钟展示即可
+            }
+        }
+        else
+        {
+            //按秒显示即可
+        }
+        return String.format("%s%s%s", diffs, unit, suffix);
     }
     
-    public static Date getCurrentDate()
+    /**
+     * Date加减计算，增加指定的字段指定的数量
+     * @author nan.li
+     * @param date
+     * @param amount
+     * @param field
+     * @return
+     */
+    public static Date addDateTime(Date date, int field, int amount)
     {
-        return new Date();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.add(field, amount);
+        return calendar.getTime();
+    }
+    
+    /**
+     * Calendar加减计算，增加指定的字段指定的数量
+     * @author nan.li
+     * @param calendar
+     * @param amount
+     * @param field
+     * @return
+     */
+    public static Calendar addDateTime(Calendar calendar, int field, int amount)
+    {
+        calendar.add(field, amount);
+        return calendar;
     }
     
     /**
@@ -167,7 +424,7 @@ public class DateUtils
     public static CalendarDesc getCurrentCalendarDesc()
     {
         CalendarDesc calendarDesc = new CalendarDesc();
-        Calendar calendar = getCurrentCalendar();
+        Calendar calendar = getNowCalendar();
         
         // 显示年份  
         int year = calendar.get(Calendar.YEAR);
@@ -194,7 +451,15 @@ public class DateUtils
         int second = calendar.get(Calendar.SECOND);
         
         //属性设置
-        calendarDesc.setYear(year).setMonth(month).setWeek(week).setDayOfYear(dayOfYear).setDayOfMonth(dayOfMonth).setHourOfDay(hourOfDay).setMinute(minute).setSecond(second).setCalendar(calendar);
+        calendarDesc.setYear(year)
+            .setMonth(month)
+            .setWeek(week)
+            .setDayOfYear(dayOfYear)
+            .setDayOfMonth(dayOfMonth)
+            .setHourOfDay(hourOfDay)
+            .setMinute(minute)
+            .setSecond(second)
+            .setCalendar(calendar);
         return calendarDesc;
     }
     
@@ -325,7 +590,7 @@ public class DateUtils
         /**
          * 是否符合其中的一个时分
          * @author Administrator
-         * @param hourMinute
+         * @param hourMinute  07:15, 08:30, ...
          * @return
          */
         public boolean matchHourMinutes(String... hourMinute)
@@ -387,7 +652,9 @@ public class DateUtils
                 else
                 {
                     //开始时间与结束时间的小时数不同
-                    if ((this.hourOfDay == hourBegin && validMinutes.contains(this.minute) && this.minute >= minuteBegin) || (this.hourOfDay > hourBegin && this.hourOfDay < hourEnd && validMinutes.contains(this.minute)) || (this.hourOfDay == hourEnd && validMinutes.contains(this.minute) && this.minute <= minuteEnd))
+                    if ((this.hourOfDay == hourBegin && validMinutes.contains(this.minute) && this.minute >= minuteBegin)
+                        || (this.hourOfDay > hourBegin && this.hourOfDay < hourEnd && validMinutes.contains(this.minute))
+                        || (this.hourOfDay == hourEnd && validMinutes.contains(this.minute) && this.minute <= minuteEnd))
                     {
                         return true;
                     }

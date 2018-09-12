@@ -11,9 +11,11 @@ import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.JarEntry;
@@ -23,6 +25,7 @@ import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 
+import com.lnwazg.kit.list.Lists;
 import com.lnwazg.kit.log.Logs;
 
 /**
@@ -34,7 +37,7 @@ public class ClassKit
 {
     /** 
      * 取得某个接口下所有实现这个接口的类 
-     * */
+     */
     public static List<Class<?>> getAllClassByInterface(Class<?> c)
     {
         List<Class<?>> returnClassList = null;
@@ -43,7 +46,7 @@ public class ClassKit
             // 获取当前的包名  
             String packageName = c.getPackage().getName();
             // 获取当前包下以及子包下所以的类  
-            List<Class<?>> allClass = getClasses(packageName);
+            List<Class<?>> allClass = getPackageAllClasses(packageName);
             if (allClass != null)
             {
                 returnClassList = new ArrayList<Class<?>>();
@@ -81,21 +84,43 @@ public class ClassKit
         {
             realClassLocation = realClassLocation + File.separator + packagePathSplit[i];
         }
-        File packeageDir = new File(realClassLocation);
-        if (packeageDir.isDirectory())
+        File packageDir = new File(realClassLocation);
+        if (packageDir.isDirectory())
         {
-            String[] allClassName = packeageDir.list();
+            String[] allClassName = packageDir.list();
             return allClassName;
         }
         return null;
     }
     
-    /** 
-     * 从包package中获取所有的Class 
-     * @param pack 
-     * @return 
+    /**
+     * 从包package中获取所有的Class，排除掉内部类
+     * @author nan.li
+     * @param packageName
+     * @return
      */
-    public static List<Class<?>> getClasses(String packageName)
+    public static List<Class<?>> getPackageAllExceptInnerClasses(String packageName)
+    {
+        List<Class<?>> classes = getPackageAllClasses(packageName);
+        List<Class<?>> result = new LinkedList<>();
+        for (Class<?> clazz : classes)
+        {
+            //非内部类，才添加进去
+            if (clazz.getName().indexOf("$") == -1)
+            {
+                result.add(clazz);
+            }
+        }
+        return result;
+    }
+    
+    /**
+     * 从包package中获取所有的Class 
+     * @author nan.li
+     * @param packageName
+     * @return
+     */
+    public static List<Class<?>> getPackageAllClasses(String packageName)
     {
         //第一个class类的集合  
         List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -199,7 +224,7 @@ public class ClassKit
      * @param recursive 
      * @param classes 
      */
-    public static void findAndAddClassesInPackageByFile(String packageName, String packagePath, final boolean recursive, List<Class<?>> classes)
+    private static void findAndAddClassesInPackageByFile(String packageName, String packagePath, final boolean recursive, List<Class<?>> classes)
     {
         //获取此包的目录 建立一个File  
         File dir = new File(packagePath);
@@ -595,7 +620,8 @@ public class ClassKit
      * @param object
      * @param methodName
      */
-    public static void invokeMethod(Object object, String methodName)
+    @SuppressWarnings("unchecked")
+    public static <T> T invokeMethod(Object object, String methodName)
     {
         Method foundMethod = getMethodFromCache(object, methodName);
         if (foundMethod == null)
@@ -623,7 +649,7 @@ public class ClassKit
             }
             try
             {
-                foundMethod.invoke(object);
+                return (T)foundMethod.invoke(object);
             }
             catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
             {
@@ -634,6 +660,105 @@ public class ClassKit
         {
             Logs.w("无法找到方法：" + methodName);
         }
+        return null;
+    }
+    
+    /**
+     * 获取该类的所有声明了的字段
+     * @author nan.li
+     * @param entity
+     * @return
+     */
+    public static Field[] getAllDeclaredFields(Object entity)
+    {
+        return getAllDeclaredFields(entity.getClass());
+    }
+    
+    /**
+     * 获取该类的所有声明了的字段
+     * @author nan.li
+     * @param entity
+     * @return
+     */
+    public static Field[] getAllDeclaredFields(Class<?> clazz)
+    {
+        if (clazz == lastClass)
+        {
+            return lastFields;
+        }
+        Class<?> originalClass = clazz;
+        //优先从缓存中获取
+        Field[] fields = classAllDeclaredFieldsMap.get(clazz);
+        if (fields == null)
+        {
+            List<Field> fieldsList = new LinkedList<>();
+            for (; clazz != Object.class; clazz = clazz.getSuperclass())
+            {
+                fields = clazz.getDeclaredFields();
+                //将所有字段添加到队列首
+                fieldsList.addAll(0, Lists.asList(fields));
+            }
+            //全部遍历完毕
+            fields = fieldsList.toArray(fields);
+            //并最终加入到缓存中
+            classAllDeclaredFieldsMap.put(originalClass, fields);
+        }
+        //记录下上次访问记录
+        lastClass = originalClass;
+        lastFields = fields;
+        return fields;
+    }
+    
+    /**
+     * 上次访问的类
+     */
+    static Class<?> lastClass;
+    
+    /**
+     * 上次的计算结果
+     */
+    static Field[] lastFields;
+    
+    /**
+     * 类的所有字段（包括继承过来的）的缓存表
+     */
+    static Map<Class<?>, Field[]> classAllDeclaredFieldsMap = new HashMap<>();
+    
+    private static class NULL
+    {
+    }
+    
+    /**
+     * Get an array of types for an array of objects
+     * 
+     * @see Object#getClass()
+     */
+    private static Class<?>[] types(Object... values)
+    {
+        if (values == null)
+        {
+            return new Class[0];
+        }
+        Class<?>[] result = new Class[values.length];
+        for (int i = 0; i < values.length; i++)
+        {
+            Object value = values[i];
+            result[i] = value == null ? NULL.class : value.getClass();
+        }
+        return result;
+    }
+    
+    /**
+     * 调用任意类的有参数方法
+     * @author nan.li
+     * @param object
+     * @param methodName
+     * @param args
+     * @return
+     */
+    public static <T> T invokeMethod(Object object, String methodName, Object... args)
+    {
+        return invokeMethod(object, methodName, types(args), args);
     }
     
     /**
@@ -644,8 +769,10 @@ public class ClassKit
      * @param parameterTypes
      * @param args
      */
-    public static void invokeMethod(Object object, String methodName, Class<?>[] parameterTypes, Object... args)
+    @SuppressWarnings("unchecked")
+    public static <T> T invokeMethod(Object object, String methodName, Class<?>[] parameterTypes, Object... args)
     {
+        //1.优先精确查找
         Method method = null;
         Class<?> clazz = object.getClass();
         for (; clazz != Object.class; clazz = clazz.getSuperclass())
@@ -660,11 +787,24 @@ public class ClassKit
             {
             }
         }
+        //2. 精确查找方法失败，开启模糊匹配
+        if (method == null)
+        {
+            Logs.i("精确查找方法失败，开启模糊匹配...");
+            try
+            {
+                method = similarMethod(clazz, methodName, parameterTypes);
+            }
+            catch (NoSuchMethodException e)
+            {
+                e.printStackTrace();
+            }
+        }
         if (method != null)
         {
             try
             {
-                method.invoke(object, args);
+                return (T)method.invoke(object, args);
             }
             catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
             {
@@ -675,6 +815,129 @@ public class ClassKit
         {
             Logs.w("无法找到方法：" + methodName);
         }
+        return null;
+    }
+    
+    /**
+     * Searches a method with a similar signature as desired using
+     * {@link #isSimilarSignature(java.lang.reflect.Method, String, Class[])}.
+     * <p>
+     * First public methods are searched in the class hierarchy, then private
+     * methods on the declaring class. If a method could be found, it is
+     * returned, otherwise a {@code NoSuchMethodException} is thrown.
+     */
+    private static Method similarMethod(Class<?> type, String name, Class<?>[] types)
+        throws NoSuchMethodException
+    {
+        // first priority: find a public method with a "similar" signature in class hierarchy
+        // similar interpreted in when primitive argument types are converted to their wrappers
+        for (Method method : type.getMethods())
+        {
+            if (isSimilarSignature(method, name, types))
+            {
+                return method;
+            }
+        }
+        // second priority: find a non-public method with a "similar" signature on declaring class
+        do
+        {
+            for (Method method : type.getDeclaredMethods())
+            {
+                if (isSimilarSignature(method, name, types))
+                {
+                    return method;
+                }
+            }
+            type = type.getSuperclass();
+        } while (type != null);
+        throw new NoSuchMethodException("No similar method " + name + " with params " + Arrays.toString(types) + " could be found on type " + type + ".");
+    }
+    
+    /**
+     * Determines if a method has a "similar" signature, especially if wrapping
+     * primitive argument types would result in an exactly matching signature.
+     */
+    private static boolean isSimilarSignature(Method possiblyMatchingMethod, String desiredMethodName, Class<?>[] desiredParamTypes)
+    {
+        return possiblyMatchingMethod.getName().equals(desiredMethodName) && match(possiblyMatchingMethod.getParameterTypes(), desiredParamTypes);
+    }
+    
+    /**
+     * Check whether two arrays of types match, converting primitive types to
+     * their corresponding wrappers.
+     */
+    private static boolean match(Class<?>[] declaredTypes, Class<?>[] actualTypes)
+    {
+        if (declaredTypes.length == actualTypes.length)
+        {
+            for (int i = 0; i < actualTypes.length; i++)
+            {
+                if (actualTypes[i] == NULL.class)
+                    continue;
+                    
+                if (wrapper(declaredTypes[i]).isAssignableFrom(wrapper(actualTypes[i])))
+                    continue;
+                    
+                return false;
+            }
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    
+    /**
+     * Get a wrapper type for a primitive type, or the argument type itself, if
+     * it is not a primitive type.
+     */
+    public static Class<?> wrapper(Class<?> type)
+    {
+        if (type == null)
+        {
+            return null;
+        }
+        else if (type.isPrimitive())
+        {
+            if (boolean.class == type)
+            {
+                return Boolean.class;
+            }
+            else if (int.class == type)
+            {
+                return Integer.class;
+            }
+            else if (long.class == type)
+            {
+                return Long.class;
+            }
+            else if (short.class == type)
+            {
+                return Short.class;
+            }
+            else if (byte.class == type)
+            {
+                return Byte.class;
+            }
+            else if (double.class == type)
+            {
+                return Double.class;
+            }
+            else if (float.class == type)
+            {
+                return Float.class;
+            }
+            else if (char.class == type)
+            {
+                return Character.class;
+            }
+            else if (void.class == type)
+            {
+                return Void.class;
+            }
+        }
+        return type;
     }
     
     static Map<String, Class<?>> classNameMap = new HashMap<>();
@@ -728,6 +991,108 @@ public class ClassKit
     }
     
     /**
+     * 生成一个指定clazz的实例对象
+     * @author nan.li
+     * @param clazz
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T newInstance(Class<T> clazz)
+    {
+        Object t = null;
+        if (clazz == int.class || clazz == Integer.class)
+        {
+            t = (int)0;
+        }
+        else if (clazz == byte.class || clazz == Byte.class)
+        {
+            t = (byte)0;
+        }
+        else if (clazz == short.class || clazz == Short.class)
+        {
+            t = (short)0;
+        }
+        else if (clazz == long.class || clazz == Long.class)
+        {
+            t = (long)0;
+        }
+        else if (clazz == float.class || clazz == Float.class)
+        {
+            t = (float)0f;
+        }
+        else if (clazz == double.class || clazz == Double.class)
+        {
+            t = (double)0;
+        }
+        else if (clazz == char.class || clazz == Character.class)
+        {
+            t = 'a';
+        }
+        else if (clazz == boolean.class || clazz == Boolean.class)
+        {
+            t = false;
+        }
+        else
+        {
+            try
+            {
+                t = clazz.newInstance();
+            }
+            catch (InstantiationException | IllegalAccessException e)
+            {
+                e.printStackTrace();
+            }
+        }
+        return (T)t;
+    }
+    
+    /**
+     * 将原生类型转换成包装类
+     * @author nan.li
+     * @param clazz
+     * @return
+     */
+    public static Class<?> transferPrimitiveTypeToWrappedType(Class<?> clazz)
+    {
+        if (clazz == int.class)
+        {
+            return Integer.class;
+        }
+        else if (clazz == byte.class)
+        {
+            return Byte.class;
+        }
+        else if (clazz == short.class)
+        {
+            return Short.class;
+        }
+        else if (clazz == long.class)
+        {
+            return Long.class;
+        }
+        else if (clazz == float.class)
+        {
+            return Float.class;
+        }
+        else if (clazz == double.class)
+        {
+            return Double.class;
+        }
+        else if (clazz == char.class)
+        {
+            return Character.class;
+        }
+        else if (clazz == boolean.class)
+        {
+            return Boolean.class;
+        }
+        else
+        {
+            return clazz;
+        }
+    }
+    
+    /**
      * 实例化的更好方式<br>
      * 可以调用带参数的构造函数
      * @author nan.li
@@ -766,6 +1131,26 @@ public class ClassKit
             e.printStackTrace();
         }
         return null;
+    }
+    
+    /**
+     * 检查某个类是否存在
+     * @author nan.li
+     * @param classFullPath
+     * @return
+     */
+    public static boolean checkClassPathExists(String classFullPath)
+    {
+        Logs.d("检查以下类是否在classPath中：" + classFullPath);
+        try
+        {
+            Class.forName(classFullPath);
+        }
+        catch (ClassNotFoundException e)
+        {
+            return false;
+        }
+        return true;
     }
     
 }

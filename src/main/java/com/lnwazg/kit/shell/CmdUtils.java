@@ -8,7 +8,10 @@ import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.lang3.CharEncoding;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
+
+import com.lnwazg.kit.log.Logs;
 
 /**
  * 命令行工具
@@ -110,6 +113,23 @@ public class CmdUtils
     
     public static void execute(String cmd, int[] exitValues, SuccessCallback successCallback, FailCallback failCallback)
     {
+        execute(cmd, exitValues, successCallback, failCallback, null);
+    }
+    
+    public static void execute(String cmd, int[] exitValues, SuccessCallback successCallback, FailCallback failCallback, ErrorStreamCallback errorStreamCallback)
+    {
+        if (StringUtils.isEmpty(cmd))
+        {
+            return;
+        }
+        
+        //假如是E:/path/to/foo/foo.bat这样的命令
+        if (cmd.endsWith(".bat") && cmd.indexOf("cmd.exe") == -1)
+        {
+            //最终执行得是这样的完整命令            cmd.exe /C start /b foo.bat
+            cmd = String.format("cmd.exe /C start /b %s", cmd);
+        }
+        Logs.i(String.format("即将执行命令:%s", cmd));
         CommandLine cmdLine = CommandLine.parse(cmd);
         try
         {
@@ -135,15 +155,27 @@ public class CmdUtils
             {
                 outputEncoding = CharEncoding.ISO_8859_1;
             }
-            String out = outputStream.toString(outputEncoding);
-            String error = errorStream.toString(outputEncoding);
             //执行过程中的控制台输出
-            System.out.println(out + error);
+            String outMsg = outputStream.toString(outputEncoding);
+            //报错信息
+            String errorMsg = errorStream.toString(outputEncoding);
+            
+            Logs.i("outputStream content: " + outMsg);
+            Logs.i("errorStream content: " + errorMsg);
+            
+            //'svn' 不是内部或外部命令，也不是可运行的程序或批处理文件。
+            
             //执行安装程序
-            System.out.println(String.format("Cmd exitValue:%s", ret));
+            Logs.i(String.format("Cmd exitValue: %s", ret));
             if (successCallback != null)
             {
                 successCallback.execute();
+            }
+            
+            //对报错信息的处理
+            if (errorStreamCallback != null)
+            {
+                errorStreamCallback.execute(errorMsg);
             }
         }
         catch (ExecuteException e1)
@@ -182,5 +214,15 @@ public class CmdUtils
     public static interface FailCallback
     {
         void execute(final Exception e);
+    }
+    
+    /**
+     * 报错信息的回调
+     * @author nan.li
+     * @version 2017年5月9日
+     */
+    public static interface ErrorStreamCallback
+    {
+        void execute(String errorMsg);
     }
 }

@@ -7,7 +7,7 @@ import java.util.Map;
 import javax.annotation.Resource;
 
 import com.lnwazg.kit.cache.JvmMemCacheLite;
-import com.lnwazg.kit.cache.key.JvmMemCacheKey;
+import com.lnwazg.kit.cache.key.JvmMemCacheLiteKey;
 
 /**
  * 单例管理器<br>
@@ -18,26 +18,65 @@ import com.lnwazg.kit.cache.key.JvmMemCacheKey;
  */
 public class BeanMgr
 {
-    private static Map<Class<?>, Object> SingletonMap = new HashMap<>();
+    /**
+     * 类-实例 映射表<br>
+     * 单例模式管理器
+     */
+    private static Map<Class<?>, Object> SingletonClazz2ObjectMap = new HashMap<>();
     
     /**
-     * 存储一个类
+     * 存储一个类的实例<br>
+     * 根据实例名自动推测出所属的类<br>
+     * 注意：此方法可能不适用于动态代理工具生产出来的实例的自动注入！因为动态代理工具生产出来的实例一般是XXXProxy$xxx这样的内部类
      * @author Administrator
      * @param t
      */
     public static <T> void put(T t)
     {
-        SingletonMap.put(t.getClass(), t);
+        SingletonClazz2ObjectMap.put(t.getClass(), t);
     }
     
-    public static <T> void put(Class<T> clazz, T t)
+    //弃用，因为此处的泛型定义无意义
+    //    /**
+    //     * 存储一个类的实例<br>
+    //     * 普遍适用的首选方法，尤其适合针对动态代理生成的实例手动指定Class类这样的情况！
+    //     * @author nan.li
+    //     * @param clazz
+    //     * @param t
+    //     */
+    //    public static <T> void put(Class<T> clazz, T t)
+    //    {
+    //        SingletonClazz2ObjectMap.put(clazz, t);
+    //    }
+    
+    /**
+     * 存储一个类的实例<br>
+     * 同样是普遍适用的，但是该方法不限制实例的泛型类型，可以任意指定对象进行注入，包括动态代理工具生产的对象！<br>
+     * 这个方法将比put(Class<T> clazz, T t)更强大给力！
+     * @author nan.li
+     * @param clazz
+     * @param object
+     */
+    public static void put(Class<?> clazz, Object object)
     {
-        SingletonMap.put(clazz, t);
+        SingletonClazz2ObjectMap.put(clazz, object);
     }
     
     /**
-     * 取出一个类的实例<br>
-     * 假如查不到这个类的实例，则会返回一个默认的实例
+     * 查找实例
+     * 仅查询某个key clazz是否有值，不做额外的实例化操作
+     * @author nan.li
+     * @param clazz
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T query(Class<T> clazz)
+    {
+        return (T)SingletonClazz2ObjectMap.get(clazz);
+    }
+    
+    /**
+     * 查找实例（若查不到，则自动实例化一个默认的实例）
      * @author Administrator
      * @param clazz
      * @return
@@ -45,7 +84,7 @@ public class BeanMgr
     @SuppressWarnings("unchecked")
     public static <T> T get(Class<T> clazz)
     {
-        T t = (T)SingletonMap.get(clazz);
+        T t = (T)SingletonClazz2ObjectMap.get(clazz);
         if (t == null)
         {
             //为空，则返回默认的实例
@@ -63,7 +102,7 @@ public class BeanMgr
                 e.printStackTrace();
             }
         }
-        return (T)SingletonMap.get(clazz);
+        return t;
     }
     
     /**
@@ -72,7 +111,7 @@ public class BeanMgr
      * @param clazz
      * @param objects
      */
-    public static <T> void inject(Class<T> clazz, Object... objects)
+    public static <T> void injectAndPut(Class<T> clazz, Object... objects)
     {
         try
         {
@@ -88,7 +127,6 @@ public class BeanMgr
         {
             e.printStackTrace();
         }
-        
     }
     
     /**
@@ -97,7 +135,7 @@ public class BeanMgr
      * @param t
      * @param objects
      */
-    public static <T> void inject(T t, Object... objects)
+    public static <T> void injectAndPut(T t, Object... objects)
     {
         injectByTypeAndAnno(t, objects);
         put(t);
@@ -109,15 +147,13 @@ public class BeanMgr
      * @param t
      * @param objects
      */
+    @SuppressWarnings("unchecked")
     private static <T> void injectByTypeAndAnno(T t, Object... objects)
     {
         if (objects == null || objects.length == 0)
         {
             return;
         }
-        //        @Resource
-        //        UserDao userDao;
-        @SuppressWarnings("unchecked")
         Class<T> clazz = (Class<T>)t.getClass();
         Field[] fields = clazz.getDeclaredFields();
         for (Field field : fields)
@@ -160,14 +196,14 @@ public class BeanMgr
         if (JvmMemCacheLite.get(clazzFullName) != null)
         {
             //此处做了缓存处理，避免了反射造成的性能瓶颈
-            return JvmMemCacheLite.get(JvmMemCacheKey.classFullName.name() + clazzFullName);
+            return JvmMemCacheLite.get(JvmMemCacheLiteKey.classFullName.name() + clazzFullName);
         }
         Class<?> clazz;
         try
         {
             clazz = Class.forName(clazzFullName);
             Object o = get(clazz);
-            JvmMemCacheLite.put(JvmMemCacheKey.classFullName.name() + clazzFullName, o);
+            JvmMemCacheLite.put(JvmMemCacheLiteKey.classFullName.name() + clazzFullName, o);
             return o;
         }
         catch (ClassNotFoundException e)

@@ -1,6 +1,9 @@
 package com.lnwazg.kit.security;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -15,6 +18,8 @@ import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESKeySpec;
 import javax.crypto.spec.SecretKeySpec;
+
+import org.apache.commons.lang3.CharEncoding;
 
 import com.lnwazg.kit.log.Logs;
 
@@ -81,17 +86,30 @@ public class SecurityUtils
         return replaced;
     }
     
+    public static String base64Encode(String param)
+    {
+        try
+        {
+            return base64Encode(param.getBytes(CharEncoding.UTF_8));
+        }
+        catch (UnsupportedEncodingException e)
+        {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
     /** 
      * base64解密
      * @param str
      * @return
      * @see [类、类#方法、类#成员]
      */
-    public static byte[] base64Decode(String str)
+    public static byte[] base64DecodeToBytes(String param)
     {
         try
         {
-            return new BASE64Decoder().decodeBuffer(str);
+            return new BASE64Decoder().decodeBuffer(param);
         }
         catch (IOException e)
         {
@@ -99,6 +117,23 @@ public class SecurityUtils
             e.printStackTrace();
             return null;
         }
+    }
+    
+    public static String base64DecodeToStr(String param)
+    {
+        byte[] bs = base64DecodeToBytes(param);
+        if (bs != null && bs.length > 0)
+        {
+            try
+            {
+                return new String(bs, CharEncoding.UTF_8);
+            }
+            catch (UnsupportedEncodingException e)
+            {
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
     
     /** 
@@ -216,7 +251,7 @@ public class SecurityUtils
             Cipher cipher = Cipher.getInstance("AES");
             cipher.init(Cipher.DECRYPT_MODE, skeySpec);
             // 将结果进行base64解码,获得二进制数组
-            byte[] encrypted1 = base64Decode(enString);
+            byte[] encrypted1 = base64DecodeToBytes(enString);
             byte[] original = cipher.doFinal(encrypted1);
             String originalString = new String(original, "UTF-8");
             return originalString;
@@ -364,16 +399,65 @@ public class SecurityUtils
         return !isEmpty(cs);
     }
     
-    public static void main(String[] args)
+    /**
+     * 获取某个文件的MD5 Checksum值<br>
+     * 主要用于检测两个文件是否完全一致<br>
+     * 这个就是对文件的摘要算法，类似于SHA1、SHA256等等摘要算法<br>
+     * 常用摘要算法包括：Hex、Base64、MD5、SHA1、SHA256、MAC
+     * @author nan.li
+     * @param filename
+     * @return
+     * @throws Exception
+     */
+    public static String getMD5Checksum(String filename)
         throws Exception
     {
-        String originalStr = "这个是原有的报文  沙发撒旦法  sdfsaf  撒旦法萨芬是方式发撒地方撒地方 sadsafsadfsa @234234%&%&^%&& 原有的报文结束";
-        String password = "21gty75^667867u^";
-        byte[] encoded = desEncode(originalStr.getBytes("UTF-8"), password);
-        System.out.println(new String(encoded, "UTF-8"));
-        
-        byte[] decoded = desDecode(encoded, password);
-        System.out.println(new String(decoded, "UTF-8"));
+        return getMD5Checksum(new File(filename));
     }
     
+    /**
+     * 获取某个文件的MD5 Checksum值<br>
+     * 主要用于检测两个文件是否完全一致
+     * @author nan.li
+     * @param file
+     * @return
+     * @throws Exception
+     */
+    public static String getMD5Checksum(File file)
+        throws Exception
+    {
+        byte[] b = createChecksum(file);
+        String result = "";
+        for (int i = 0; i < b.length; i++)
+        {
+            result += Integer.toString((b[i] & 0xff) + 0x100, 16).substring(1);//加0x100是因为有的b[i]的十六进制只有1位
+        }
+        return result;
+    }
+    
+    /**
+     * MD5 Checksum算法
+     * @author nan.li
+     * @param file
+     * @return
+     * @throws Exception
+     */
+    public static byte[] createChecksum(File file)
+        throws Exception
+    {
+        InputStream fis = new FileInputStream(file);          //将流类型字符串转换为String类型字符串
+        byte[] buffer = new byte[1024];
+        MessageDigest complete = MessageDigest.getInstance("MD5"); //如果想使用SHA-1或SHA-256，则传入SHA-1,SHA-256
+        int numRead;
+        do
+        {
+            numRead = fis.read(buffer);    //从文件读到buffer，最多装满buffer
+            if (numRead > 0)
+            {
+                complete.update(buffer, 0, numRead);  //用读到的字节进行MD5的计算，第二个参数是偏移量
+            }
+        } while (numRead != -1);
+        fis.close();
+        return complete.digest();
+    }
 }

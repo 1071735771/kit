@@ -76,6 +76,17 @@ public final class RandomStrUtils
     }
     
     /**
+     * 生成随机的数字验证码
+     * @author nan.li
+     * @param codeCount
+     * @return
+     */
+    public static String generateRandomDigits(int codeCount)
+    {
+        return RandomStrUtils.generateCodeFromString(codeCount, DIGITS);
+    }
+    
+    /**
      * 生成一个30位的随机字符串
      * @author nan.li
      * @return

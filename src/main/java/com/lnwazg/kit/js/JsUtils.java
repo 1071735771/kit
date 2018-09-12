@@ -30,12 +30,24 @@ public class JsUtils
      */
     public static Invocable loadJs(String scriptPath)
     {
+        return loadJs(new File(scriptPath));
+        
+    }
+    
+    /**
+     * 加载某个js，获取其可调用引擎<br>
+     * 如果无法正确地获取到，那么返回null
+     * @author nan.li
+     * @param scriptFile
+     * @return
+     */
+    public static Invocable loadJs(File scriptFile)
+    {
         // 创建脚本引擎管理器
         ScriptEngineManager factory = new ScriptEngineManager();
         // 创建JavaScript引擎
         ScriptEngine engine = factory.getEngineByName("JavaScript");
         // 从字符串中赋值JavaScript脚本
-        File scriptFile = new File(scriptPath);
         FileReader reader = null;
         try
         {
@@ -63,7 +75,37 @@ public class JsUtils
     }
     
     /**
-     * 调用某个js的某个方法，传入可变参数
+     * 根据js的文本内容去加载某个js，获取其可调用引擎<br>
+     * @author nan.li
+     * @param script
+     * @return
+     */
+    private static Invocable loadJsByJsContent(String script)
+    {
+        // 创建脚本引擎管理器
+        ScriptEngineManager factory = new ScriptEngineManager();
+        // 创建JavaScript引擎
+        ScriptEngine engine = factory.getEngineByName("JavaScript");
+        // 从字符串中赋值JavaScript脚本
+        try
+        {
+            engine.eval(script);
+            if (engine instanceof Invocable)
+            {
+                Invocable invoke = (Invocable)engine;
+                return invoke;
+            }
+        }
+        catch (ScriptException e)
+        {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    /**
+     * 调用某个js的某个方法，传入可变参数<br>
+     * 例如： JsUtils.invoke("c:\\1.js", "add", 12134.2134234);
      * @author nan.li
      * @param scriptPath
      * @param methodName
@@ -72,12 +114,26 @@ public class JsUtils
      */
     public static Object invoke(String scriptPath, String methodName, Object... args)
     {
-        Invocable invocable = loadJs(scriptPath);
+        return invoke(new File(scriptPath), methodName, args);
+    }
+    
+    /**
+     * 调用某个js的某个方法，传入可变参数<br>
+     * 例如： JsUtils.invoke(new File("c:\\1.js"), "add", 12134.2134234);
+     * @author nan.li
+     * @param scriptFile
+     * @param methodName
+     * @param args
+     * @return
+     */
+    public static Object invoke(File scriptFile, String methodName, Object... args)
+    {
+        Invocable invocable = loadJs(scriptFile);
         if (invocable != null)
         {
             try
             {
-                return invocable.invokeFunction("add", args);
+                return invocable.invokeFunction(methodName, args);
             }
             catch (NoSuchMethodException e)
             {
@@ -91,6 +147,33 @@ public class JsUtils
         return null;
     }
     
+    public static Object invokeByJsContent(String script, String methodName, Object... args)
+    {
+        Invocable invocable = loadJsByJsContent(script);
+        if (invocable != null)
+        {
+            try
+            {
+                return invocable.invokeFunction(methodName, args);
+            }
+            catch (NoSuchMethodException e)
+            {
+                e.printStackTrace();
+            }
+            catch (ScriptException e)
+            {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * 不调用该js的指定的方法，而是直接对该js进行eval()求值，并输出求值的结果
+     * @author nan.li
+     * @param scriptPath
+     * @return
+     */
     public static Object invoke(String scriptPath)
     {
         // 创建脚本引擎管理器

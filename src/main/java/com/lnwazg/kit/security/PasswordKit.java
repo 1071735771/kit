@@ -82,12 +82,4 @@ public class PasswordKit
         }
         return null;
     }
-    
-    public static void main(String[] args)
-    {
-        System.out.println(SecurityUtils.md5Encode("1"));
-        System.out.println(SecurityUtils.md5Encode(DEFAULT_TRANSFER_PASSWORD));
-        System.out.println(SecurityUtils.md5Encode(DEFAULT_TRANSFER_PASSWORD + DEFAULT_TRANSFER_PASSWORD));
-        System.out.println(SecurityUtils.md5Encode(DEFAULT_TRANSFER_PASSWORD + DEFAULT_TRANSFER_PASSWORD + DEFAULT_TRANSFER_PASSWORD));
-    }
 }

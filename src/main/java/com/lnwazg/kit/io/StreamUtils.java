@@ -1,13 +1,11 @@
 package com.lnwazg.kit.io;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.Socket;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
+import com.lnwazg.kit.log.Logs;
 
 /**
  * I/O stream的帮助类
@@ -19,22 +17,35 @@ import org.apache.commons.logging.LogFactory;
 public final class StreamUtils
 {
     /**
-    * Logger for this class
-    */
-    private static final Log logger = LogFactory.getLog(StreamUtils.class);
-    
-    /**
-     * 构造函数
+     * 通用的关闭方法
+     * @author lnwazg@126.com
+     * @param objects
      */
-    private StreamUtils()
+    public static void close(Object... objects)
     {
-        //阻止调用构造方法
+        if ((null == objects) || (objects.length == 0))
+        {
+            return;
+        }
+        for (Object object : objects)
+        {
+            if (object instanceof Closeable)
+            {
+                close((Closeable)object);
+            }
+            else if (object instanceof HttpURLConnection)
+            {
+                close((HttpURLConnection)object);
+            }
+            else
+            {
+                Logs.w(String.format("无法识别的待关闭对象类型:%s， 忽略之！", object));
+            }
+        }
     }
     
     /** 
-     * 同时关闭多个流对象
-     * @param streams   待关闭的流对象，可以使用数组或多参数的方式传入多个参数值
-     * @see [类、类#方法、类#成员]
+     * 关闭流对象
      */
     public static void close(Closeable... streams)
     {
@@ -48,35 +59,28 @@ public final class StreamUtils
         }
     }
     
-    public static void close(Socket... sockets)
-    {
-        for (Socket socket : sockets)
-        {
-            if (socket != null && !socket.isClosed())
-            {
-                try
-                {
-                    socket.close();
-                }
-                catch (IOException e)
-                {
-                }
-            }
-        }
-    }
-    
     /**
-     * 关闭HTTP连接
-     * 
-     * @param urlConnection
-     *            HTTP连接实例
+     *  关闭http连接对象
+     * @author nan.li
+     * @param urlConnections
      */
-    public static void disconnect(HttpURLConnection urlConnection)
+    public static void close(HttpURLConnection... urlConnections)
     {
-        if (null == urlConnection)
+        if ((null == urlConnections) || (urlConnections.length == 0))
         {
             return;
         }
-        urlConnection.disconnect();
+        for (HttpURLConnection httpURLConnection : urlConnections)
+        {
+            disconnect(httpURLConnection);
+        }
+    }
+    
+    private static void disconnect(HttpURLConnection urlConnection)
+    {
+        if (null != urlConnection)
+        {
+            urlConnection.disconnect();
+        }
     }
 }

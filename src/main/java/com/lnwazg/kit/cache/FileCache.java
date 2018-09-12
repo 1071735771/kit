@@ -6,6 +6,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
+import com.lnwazg.kit.gson.GsonKit;
+import com.lnwazg.kit.log.Logs;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
@@ -48,6 +51,11 @@ public class FileCache
         this(String.format("c_%s", System.currentTimeMillis()));//cache对象的名称。做到每次新建的时候均不重复
     }
     
+    public FileCache(boolean recordTimestamp)
+    {
+        this(String.format("c_%s", System.currentTimeMillis()), recordTimestamp);
+    }
+    
     /**
      * 构造函数<br>
      * 采用指定的缓存文件名<br>
@@ -68,6 +76,7 @@ public class FileCache
     {
         System.setProperty(net.sf.ehcache.CacheManager.ENABLE_SHUTDOWN_HOOK_PROPERTY, "true");
         String cache_name = cacheName;
+        Logs.i("创建FileCache：" + cacheName);
         final CacheManager manager = CacheManager.getInstance();
         cacheObj = manager.getCache(cache_name);
         this.recordTimestamp = recordTimestamp;
@@ -147,7 +156,88 @@ public class FileCache
         {
             cacheObj.put(new Element(key, value));
         }
-        //        recordTimestampMap.put(key, System.currentTimeMillis());
+    }
+    
+    /**
+     * 将对象放入缓存<br>
+     * 如果该Object是不可序列化的，那么会自动将其转为json String
+     * @author nan.li
+     * @param key
+     * @param value
+     */
+    public void put(Serializable key, Object value)
+    {
+        if (recordTimestamp)
+        {
+            cacheObj.put(new Element(key, new ImmutablePair<Long, Serializable>(System.currentTimeMillis(), serial(value))));
+        }
+        else
+        {
+            cacheObj.put(new Element(key, serial(value)));
+        }
+    }
+    
+    /**
+     * 将具体对象序列化为内部可序列化的对象ObjJsonContainer
+     * @author nan.li
+     * @param value
+     * @return
+     */
+    private Serializable serial(Object obj)
+    {
+        return new ObjJsonContainer(obj);
+    }
+    
+    /**
+     * 将ObjJsonContainer反序列化为具体对象
+     * @author nan.li
+     * @param container
+     * @return
+     */
+    private Object deserial(ObjJsonContainer container)
+    {
+        return container.getObject();
+    }
+    
+    /**
+     * 内部专用容器，仅用于存放序列化后的对象数据，以及根据数据还原成原始对象<br>
+     * 该容器的作用，是将一个不可序列化的对象做相互转换
+     * @author nan.li
+     * @version 2017年4月8日
+     */
+    private static class ObjJsonContainer implements Serializable
+    {
+        private static final long serialVersionUID = 1L;
+        
+        /**
+         * 对象json化后的数据
+         */
+        private String objStr;
+        
+        /**
+         * 对象所属的clazz信息
+         */
+        private Class<?> objClazz;
+        
+        /**
+         * 构造函数 
+         * @param obj
+         */
+        public ObjJsonContainer(Object obj)
+        {
+            this.objStr = GsonKit.gson.toJson(obj);
+            this.objClazz = obj.getClass();
+        }
+        
+        /**
+         * 还原对象信息
+         * @author nan.li
+         * @return
+         */
+        public Object getObject()
+        {
+            return GsonKit.gson.fromJson(objStr, objClazz);
+        }
     }
     
     /**
@@ -202,7 +292,12 @@ public class FileCache
             }
             else
             {
-                return ((ImmutablePair<Long, Serializable>)element.getObjectValue()).getRight();
+                Object thatObj = ((ImmutablePair<Long, Serializable>)element.getObjectValue()).getRight();
+                if (thatObj instanceof ObjJsonContainer)
+                {
+                    thatObj = deserial((ObjJsonContainer)thatObj);
+                }
+                return thatObj;
             }
         }
         else
@@ -223,14 +318,20 @@ public class FileCache
         Element element = cacheObj.get(key);
         if (null != element)
         {
+            Object thatObj = null;
             if (recordTimestamp)
             {
-                return ((ImmutablePair<Long, Serializable>)element.getObjectValue()).getRight();
+                thatObj = ((ImmutablePair<Long, Serializable>)element.getObjectValue()).getRight();
             }
             else
             {
-                return element.getObjectValue();
+                thatObj = element.getObjectValue();
             }
+            if (thatObj instanceof ObjJsonContainer)
+            {
+                thatObj = deserial((ObjJsonContainer)thatObj);
+            }
+            return thatObj;
         }
         return null;
     }

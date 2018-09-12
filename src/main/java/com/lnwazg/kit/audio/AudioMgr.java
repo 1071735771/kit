@@ -13,10 +13,9 @@ import javazoom.jl.player.Player;
  */
 public class AudioMgr
 {
-
     /**
      * 播放音频文件<br>
-     * 可以播放MP3
+     * 可以播放MP3文件
      * @author nan.li
      * @param audioFile
      */
@@ -33,5 +32,4 @@ public class AudioMgr
             e.printStackTrace();
         }
     }
-
 }
