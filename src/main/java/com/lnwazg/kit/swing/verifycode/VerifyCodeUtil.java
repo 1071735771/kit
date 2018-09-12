@@ -13,10 +13,8 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * 验证码工具
- * 
- * @author 002357
- * @version CME01 2012-3-15
- * @since V100R001C03LCME01
+ * @author nan.li
+ * @version 2018年9月12日
  */
 public class VerifyCodeUtil
 {
@@ -35,8 +33,7 @@ public class VerifyCodeUtil
     
     /**
      * 绘制验证码
-     * 
-     * @author 002357
+     * @author nan.li
      * @param request
      * @param response
      * @throws IOException
