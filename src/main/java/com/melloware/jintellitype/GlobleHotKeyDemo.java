@@ -11,7 +11,6 @@ import javax.swing.JOptionPane;
 /**
  * 利用JIntellitype实现全局热键设置
  * @author Jeby Sun
- *
  */
 public class GlobleHotKeyDemo extends JFrame
 {
