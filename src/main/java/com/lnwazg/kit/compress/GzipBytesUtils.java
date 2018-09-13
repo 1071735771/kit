@@ -16,17 +16,11 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * gzip字节压缩以及解压缩工具类
- * 
- * @author  Administrator
- * @version  [版本号, 2012-9-30]
- * @see  [相关类/方法]
- * @since  [产品/模块版本]
+ * @author nan.li
+ * @version 2018年9月13日
  */
 public class GzipBytesUtils
 {
-    /**
-    * Logger for this class
-    */
     private static final Log logger = LogFactory.getLog(GzipBytesUtils.class);
     
     /** 

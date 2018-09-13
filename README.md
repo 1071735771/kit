@@ -6,7 +6,13 @@ java精华工具类集锦：
 - bytes 字节工具类：字节数组转二进制、字节数组转十六进制、十六进制转字节数组、字节转换字符串
 - cache 缓存工具：内存型缓存、文件型缓存
 - charset 字符集工具，获取任意文本文件的字符编码
-- compress 字节码压缩&解压缩工具
+- common.model 通用型RESTFUL接口返回对象
+- compress 字节压缩和解压缩工具
+- controllerpattern Controller模式框架的通用型脚手架，包扫描注入模式的利器
+- converter 通用对象值转换器，可将字符串值类型转换成其他常用值类型（boolean,double,
+float,long,int,byte,short等）
+- datastructure 二元组（Pair）、三元组（Triple）对象容器，当你想同时返回两个或三个对象，但又不想新建一个
+对象容器的时候，可以使用这个通用型容器
 - document pdf生成器
 - excel  excel导出工具
 - executor 通用的线程池工具
