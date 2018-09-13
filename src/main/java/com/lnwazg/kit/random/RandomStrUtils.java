@@ -41,7 +41,6 @@ public final class RandomStrUtils
         {
             return null;
         }
-        
         //备选字符串的长度
         int baseLength = baseString.length();
         
@@ -59,7 +58,6 @@ public final class RandomStrUtils
             //将该位的字符追加到结果字符中
             result.append(chars[number]);
         }
-        
         return result.toString();
     }
     

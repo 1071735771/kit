@@ -1,7 +1,5 @@
 package com.lnwazg.kit.object;
 
-import org.apache.commons.lang.ObjectUtils;
-
 /**
  * 对象工具类
  * @author nan.li

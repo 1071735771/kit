@@ -21,22 +21,48 @@ java精华工具类集锦：
 无限制线程池、单任务线程池、指定任务数线程池、流量可控制的线程池、
 sqlite单线程写线程池、swing调度线程池、
 可运行定时任务的线程池、forkJoin运行池、启动一个后台线程工具、任务管理器
-- file 文件工具。检查配置目录、获取全平台配置目录、文件夹内文件根据hash值去重、从txt文件读取格式化数据
+- file 文件工具。检查配置目录、获取全平台配置目录、重复文件清理（文件夹内文件根据hash值去重）、从txt文件读取格式化数据
 - freemarker Freemarker模板配置工具、Freemarker模板格式化输出工具
 - gson 强大的json与对象互转工具，json美化格式化输出
 - handlerseq 一个任务串行化处理工具
-- log 简洁好用的日志工具
+- http 本地IP、域名、MAC地址获取，URL编解码，URL参数解析、URL参数提取、去参数，文件下载，
+GET、POST请求工具，系统代理设置
+- io 优雅地关闭任意对象的工具类
+- javac.in.memory 内存内代码编译器，热编译Java代码并执行
+- job
+    JobInitServlet 简单的servlet形式的job执行引擎
+    JobLoader  并根据类注解信息，进行包扫描并执行job
+- js java动态调用js代码
+- json 以json的形式来存取配置信息
+- list 快速生成一个list，list空判断
+- log 一个精简的日志工具。可用于swing控制台打印
+- map 快速生成一个（有序）的map，map空判断
+- mime http所有类型的mime信息映射工具类
+- object 对象引用工具
+- parallel fork/join并行计算
+- property 强大的属性文件读写工具，支持注释，可网络加载
+- proxy cglib动态代理工具、字节增强工具
+- pubsub 发布订阅模式
+- qrcode 二维码生成工具
+- queue  超大混合型内存磁盘Queue
+- random 随机数工具，可随机生成字符串
+- reflect 高效的java反射工具类。
+包扫描获取类列表、高性能反射调用、类加载实例化、代码热编译执行、map自动转对象、
+对象引用、远程类加载、远程jar包调用、TypeReference任意泛型类型引用
+- remote
+
+
+
+- swing 一系列美妙的图片工具类。
+
+
+
 - R 跟图片资源相关的工具类
-- ImageUtil 一系列美妙的图片工具类
 - testframework 一个小巧的单元测试框架
 - singleton 类spring单例工厂的实现
-- qrcode 验证码相关的
-- queue  超强的内存与文件混合队列工具，曾用于我的高性能mq产品框架中。
-超大几乎接近无限量大的缓存queue，海量堆积能力，超强性能！
-拥有百万级本地待处理数据量的数据堆积能力！
 - cglib 好用的cglib代理
 - shell  命令行相关的工具
-- reflect 高效的java反射工具类
+
 - DateUtils 日期工具类大全，你想要的日期工具这里都有！
 - RemoteJarKit 超强的远程jar包执行工具，这个是分布式任务jar包提交的核心基础工具
 - IpHostUtils  超强的本地IP工具类

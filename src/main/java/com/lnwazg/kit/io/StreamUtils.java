@@ -9,10 +9,8 @@ import com.lnwazg.kit.log.Logs;
 
 /**
  * I/O stream的帮助类
- * 
- * @author lKF20528
- * @version C02 2010-7-8
- * @since OpenEye TAPS V100R001C02
+ * @author nan.li
+ * @version 2018年9月13日
  */
 public final class StreamUtils
 {

@@ -31,7 +31,6 @@ import com.lnwazg.kit.file.PathKit;
 /**
  * 二维码工具类<br>
  * 使用方法请参考main()以及generateQrCode()这两个方法<br>
- * 自闭流，是最强大可靠的存在（无须依赖外界，即可自我生产、自我进攻，例如迫击炮流！）
  */
 public class QRCodeUtil
 {
@@ -57,7 +56,6 @@ public class QRCodeUtil
     
     /**
      * 生成二维码，并将响应的字节流输出到页面中
-     * 
      * @author nan.li
      * @param url
      * @param rsp
@@ -158,7 +156,6 @@ public class QRCodeUtil
     
     /**
      * 生成二维码(内嵌LOGO)
-     * 
      * @param content
      *            内容
      * @param imgPath
@@ -282,9 +279,7 @@ public class QRCodeUtil
     
     /**
      * 解析二维码
-     * 
-     * @param file
-     *            二维码图片
+     * @param file 二维码图片
      * @return
      * @throws Exception
      */
@@ -309,9 +304,7 @@ public class QRCodeUtil
     
     /**
      * 解析二维码
-     * 
-     * @param path
-     *            二维码图片地址
+     * @param path 二维码图片地址
      * @return
      * @throws Exception
      */
@@ -320,5 +313,4 @@ public class QRCodeUtil
     {
         return QRCodeUtil.decode(new File(path));
     }
-    
 }

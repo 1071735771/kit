@@ -16,7 +16,7 @@ import java.util.Locale;
 
 import org.apache.commons.lang3.CharEncoding;
 
-import com.lnwazg.kit.number.Hexadecimal;
+import com.lnwazg.kit.bytes.Hexadecimal;
 
 /**
  * URI编解码执行器

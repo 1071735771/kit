@@ -1,19 +1,9 @@
-/*
- * 文件名：Hexadecimal.java
- * 版权：Copyright 2008-2009 Huawei Tech.Co.Ltd.All Rights Reserved.
- * 描述：
- * 修改人：t00101719
- * 修改时间：2009-5-10
- * 修改内容：新增
- */
-package com.lnwazg.kit.number;
+package com.lnwazg.kit.bytes;
 
 /**
  * 数值的十六进制转换器
- * 
- * @author t00101719
- * @version C02 2009-5-10
- * @since OpenEye WIDGET_SRV V100R001C02
+ * @author nan.li
+ * @version 2018年9月13日
  */
 public class Hexadecimal
 {
@@ -21,12 +11,6 @@ public class Hexadecimal
     
     private int num = 0;
     
-    /**
-     * Constructs a hexadecimal number with a byte.
-     * 
-     * @param num
-     *            a byte
-     */
     public Hexadecimal(byte num)
     {
         this.hex = valueOf(num);
@@ -35,7 +19,6 @@ public class Hexadecimal
     
     /**
      * Constructs a hexadecimal number with a integer.
-     * 
      * @param num
      *            a integer
      */

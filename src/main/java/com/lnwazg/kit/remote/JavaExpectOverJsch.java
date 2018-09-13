@@ -5,9 +5,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.nemo.javaexpect.shell.Shell;
-import com.nemo.javaexpect.shell.driver.SshDriver;
-
 /**
  * 最适合shell自动化测试的方式，但是不能有效地获取输出流的数据，并没有中文乱码的问题，并且可以有效地通过工具包解析出shell返回的结果<br>
  * 有待实现全自动化测试的功能，包括自动发布包的功能<br>
@@ -18,7 +15,7 @@ import com.nemo.javaexpect.shell.driver.SshDriver;
  * @version 2017年5月16日
  */
 public class JavaExpectOverJsch
-{    
+{
     /**
      * 非常棒的解析执行结果内容的工具类
      * @author nan.li
@@ -42,5 +39,5 @@ public class JavaExpectOverJsch
         }
         return null;
     }
-
+    
 }

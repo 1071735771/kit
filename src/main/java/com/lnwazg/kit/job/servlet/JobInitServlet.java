@@ -171,7 +171,6 @@ public class JobInitServlet extends HttpServlet
         try
         {
             factory.getScheduler().shutdown(true);
-            
             System.out.println("Scheduler stop success!");
         }
         catch (SchedulerException e)

@@ -21,11 +21,8 @@ import com.lnwazg.kit.io.StreamUtils;
 
 /**
  * http访问工具包
- * 
- * @author  Administrator
- * @version  [版本号, 2011-11-25]
- * @see  [相关类/方法]
- * @since  [产品/模块版本]
+ * @author nan.li
+ * @version 2018年9月13日
  */
 public class DownloadKit
 {
