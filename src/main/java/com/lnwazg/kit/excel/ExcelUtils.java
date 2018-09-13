@@ -47,22 +47,17 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
  * 在一个时间点上，只可以访问一定数量的数据
  * 不再支持Sheet.clone()
  * 不再支持公式的求值 
- * 
  * @author nan.li
  * @version 2016年2月19日
  */
 public class ExcelUtils
 {
-    /**
-     * Logger for this class
-     */
     private static final Log logger = LogFactory.getLog(ExcelUtils.class);
     
     static int EXPORT_MAX_ROWS_LIMIT = 1000000;// excel2007 单sheet最大支持1048576行
     
     //    /**
     //     * 导出数据到excel中<br>
-    //     * 
     //     * @author nan.li
     //     */
     //    public void exportDataToExcel() {
@@ -156,7 +151,6 @@ public class ExcelUtils
     
     /**
      * 导出为excel2007的格式
-     * 
      * @author nan.li
      * @param res
      * @param dataList
@@ -182,7 +176,6 @@ public class ExcelUtils
     /**
      * 导出为excel2007的格式<br>
      * 指定文件名、指定浏览器类型，以适配不同浏览器的文件名解析规则
-     * 
      * @author nan.li
      * @param res
      * @param dataList
@@ -249,7 +242,6 @@ public class ExcelUtils
     
     /**
      * 根据已经存好的数据，导出excel流
-     * 
      * @author nan.li
      * @param res
      * @param sxssfWorkbook
@@ -303,7 +295,6 @@ public class ExcelUtils
     
     /**
      * 将workbook的对象写入到文件中
-     * 
      * @author nan.li
      * @param filePath
      * @param dataName
@@ -338,7 +329,6 @@ public class ExcelUtils
     
     /**
      * 将文件数据输出到页面
-     * 
      * @author nan.li
      * @param res
      * @param filePath
@@ -394,7 +384,6 @@ public class ExcelUtils
     
     /**
      * 计算出一个缓存的快照
-     * 
      * @author nan.li
      * @param dataList
      * @param sql_name
@@ -422,7 +411,6 @@ public class ExcelUtils
     
     /**
      * 适配不同浏览器的下载文件头
-     * 
      * @author nan.li
      * @param res
      * @param fileName
@@ -480,7 +468,6 @@ public class ExcelUtils
     
     /**
      * 根据名称去获得cell的样式
-     * 
      * @author nan.li
      * @param name
      * @param sxssfWorkbook
@@ -590,7 +577,6 @@ public class ExcelUtils
     
     /**
      * 生成标题行
-     * 
      * @author nan.li
      * @param sheet
      * @param titles
@@ -609,7 +595,6 @@ public class ExcelUtils
     
     /**
      * 生成内容行
-     * 
      * @author nan.li
      * @param sheet
      * @param titles
@@ -635,7 +620,6 @@ public class ExcelUtils
     
     /**
      * 获取数据表的标题栏名称列表，该列表是有顺序的
-     * 
      * @author nan.li
      * @param dataList
      * @return

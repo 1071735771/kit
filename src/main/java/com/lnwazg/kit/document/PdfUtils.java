@@ -20,12 +20,26 @@ import com.itextpdf.text.pdf.PdfWriter;
  */
 public class PdfUtils
 {
-    
+    /**
+     * 输出pdf文件
+     * @author nan.li
+     * @param filePath
+     * @param title
+     * @param content
+     */
     public static void writePdfSimple(String filePath, String title, String... content)
     {
         writePdf(filePath, null, title, content);
     }
     
+    /**
+     * 输出pdf文件
+     * @author nan.li
+     * @param filePath
+     * @param author
+     * @param title
+     * @param content
+     */
     public static void writePdf(String filePath, String author, String title, String... content)
     {
         try
