@@ -9,7 +9,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 通用型注解，可以作为注释来使用，跟注释的区别在于，该注解可以被框架读取并利用
+ * 通用型注解，可以作为注释来使用<br>
+ * 跟注释的区别在于，该注解可以被框架读取并利用
  * @author nan.li
  * @version 2017年12月10日
  */

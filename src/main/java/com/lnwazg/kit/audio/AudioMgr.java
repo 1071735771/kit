@@ -7,7 +7,7 @@ import java.io.FileInputStream;
 import javazoom.jl.player.Player;
 
 /**
- * 音频播放器
+ * 简易音频播放器
  * @author nan.li
  * @version 2016年5月10日
  */
