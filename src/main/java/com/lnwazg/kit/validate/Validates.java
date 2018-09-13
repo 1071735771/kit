@@ -530,7 +530,6 @@ public class Validates
     
     /**
      * 验证是否为URL
-     * 
      * @param value 值
      * @param errorMsg 验证错误的信息
      * @throws ValidateException
@@ -573,7 +572,6 @@ public class Validates
     
     /**
      * 验证是否为中文字、英文字母、数字和下划线
-     * 
      * @param value 值
      * @return 是否为中文字、英文字母、数字和下划线
      */

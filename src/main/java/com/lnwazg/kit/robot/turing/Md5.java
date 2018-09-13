@@ -4,8 +4,6 @@ import java.security.MessageDigest;
 
 /**
  * md5加密
- * @author 图灵机器人
- *
  */
 public class Md5
 {

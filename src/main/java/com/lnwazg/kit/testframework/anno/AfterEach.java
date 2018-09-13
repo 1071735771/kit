@@ -7,7 +7,6 @@ import java.lang.annotation.Target;
 
 /**
  * 每一项测试之前的准备工作
- * 
  * @author nan.li
  * @version 2016年3月28日
  */

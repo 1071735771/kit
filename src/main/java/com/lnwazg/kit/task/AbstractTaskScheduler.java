@@ -55,7 +55,6 @@ public abstract class AbstractTaskScheduler<P, R extends TaskBaseResult>
     
     /**
      * 提交任务至任务调度线程池
-     * 
      * @param taskParameters 任务参数
      * @return list
      * @exception/throws [违例类型] [违例说明]
@@ -94,7 +93,6 @@ public abstract class AbstractTaskScheduler<P, R extends TaskBaseResult>
     
     /**
      * 启动定时任务调度
-     * 
      * @param taskParameters 任务参数
      * @return list
      * @exception/throws [违例类型] [违例说明]
@@ -115,7 +113,6 @@ public abstract class AbstractTaskScheduler<P, R extends TaskBaseResult>
     
     /**
      * 创建定时任务调度
-     * 
      * @param taskParameter任务参数
      * @return [返回类型说明]
      * @exception/throws [违例类型] [违例说明]

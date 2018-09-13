@@ -1,25 +1,14 @@
-/*
- * 文 件 名：HttpUrlUtil.java
- * 版    权：Copyright 2008-2009 Huawei Tech.Co.Ltd.All Rights Reserved.
- * 描    述：HTTP URL 工具类
- * 修 改 人：c00126000
- * 修改时间：2009-8-15
- * 修改内容：新增
- */
 package com.lnwazg.kit.str;
 
 import org.apache.commons.lang.StringUtils;
 
 /**
- * HTTP URL 工具类
- * 
- * @author c00126000
- * @version C03 2009-8-15
- * @since OpenEye WIDGET_PLT V100R002C03
+ * HTTP URL工具类
+ * @author nan.li
+ * @version 2018年9月13日
  */
-public final class StringUrlUtils
+public final class UrlKit
 {
-    
     /**
      * 从URL中获取IP和端口
      * 

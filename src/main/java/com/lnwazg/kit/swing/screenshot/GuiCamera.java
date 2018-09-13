@@ -157,22 +157,6 @@ public class GuiCamera
             // 根据文件前缀变量和文件格式变量，自动生成文件名
             for (int i = 0; i < num; i++)
             {
-                // 将screenshot对象写入图像文件
-                //                ImageIO.write(screenshot, imageFormat, file);
-                
-                //TODO  压缩图片视频编码的构成
-                
-                //文件头：
-                //文件数量   每个文件占用的字节数
-                //文件体：
-                //所有文件打包压缩后的gzip编码
-                
-                //TODO 可以用图片浏览器查看每一帧图片的内容
-                
-                //TODO  对于这种独特的编码格式，需要提供通过的编码工具，以便后续使用
-                
-                //TODO  这种压缩图片格式是为了便于发送传输，扩展名命名为 .gzpng
-                
                 try
                 {
                     TimeUnit.MILLISECONDS.sleep(intervalMillseconds);

@@ -19,9 +19,6 @@ import com.lnwazg.kit.servlet.ReqUtils;
  */
 public class PageJsSafeUtils
 {
-    /**
-     * Logger for this class
-     */
     private static final Log logger = LogFactory.getLog(PageJsSafeUtils.class);
     
     /**

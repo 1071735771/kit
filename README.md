@@ -49,21 +49,27 @@ GET、POST请求工具，系统代理设置
 - reflect 高效的java反射工具类。
 包扫描获取类列表、高性能反射调用、类加载实例化、代码热编译执行、map自动转对象、
 对象引用、远程类加载、远程jar包调用、TypeReference任意泛型类型引用
-- remote
-
-
-
-- swing 一系列美妙的图片工具类。
-
-
-
-- R 跟图片资源相关的工具类
-- testframework 一个小巧的单元测试框架
-- singleton 类spring单例工厂的实现
-- cglib 好用的cglib代理
-- shell  命令行相关的工具
-
-- DateUtils 日期工具类大全，你想要的日期工具这里都有！
-- RemoteJarKit 超强的远程jar包执行工具，这个是分布式任务jar包提交的核心基础工具
-- IpHostUtils  超强的本地IP工具类
-- ClassKit     高性能反射工具类
+- robot.turing 图灵机器人客户端
+- rss rss解析工具
+- runkit 获取运行时类、方法名、行号信息
+- security 一系列安全工具。http请求参数过滤检测工具，根据秘钥文件生成密码的工具，
+md5加密、base64加解密、aes加解密、des加解密、计算某个文件的MD5值
+- serialization.protostuff 高性能protostuff序列化以及反序列化工具
+- servicecenter 服务注册与获取中心
+- shell  命令行工具。执行command、shell命令并监听返回值
+- singleton 类spring单例工厂的实现，BeanMgr单例管理器
+- sort map排序工具
+- stopwatch 更好用的秒表
+- str 人民币显示工具、字符工具、中文字符判断工具、
+- swing swing工具类
+swing快捷键注解、颜色工具箱、图片尺寸获取、验证码识别、图片黑白化、
+屏幕截图、自定义Swing组件（智能按钮、无框按钮、无聚焦按钮、图形卷动器）、
+验证码生成器、图片宽高自适应、R资源管理器、弹窗工具、文件选择框工具
+- task  任务管理工具。siri小助手、任务调度工具
+- taskman 任务管理器
+- testframework 单元测试框架。单元测试、跑分测试、
+- type Java基本类型与包装类型转换工具
+- validate 验证工具类。 验证手机号格式、人名格式、邮箱格式、整形、长整形、金额、邮编、
+身份证、ip地址、url格式、汉字、UUID格式是否合法，正则校验
+- xml 对象与xml互转，xml转Document对象
+- yml yml配置文件读取工具

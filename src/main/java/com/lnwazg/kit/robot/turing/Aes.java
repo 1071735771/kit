@@ -11,7 +11,6 @@ import org.apache.commons.codec.binary.Base64;
 
 /**
  * aes加密算法
- * @author 图灵机器人
  */
 public class Aes
 {

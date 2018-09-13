@@ -9,12 +9,9 @@ import java.net.URL;
 
 /**
  * HTTP工具类
- * @author 图灵机器人
- *
  */
 public class PostServer
 {
-    
     /**
      * 向后台发送post请求
      * @param param
